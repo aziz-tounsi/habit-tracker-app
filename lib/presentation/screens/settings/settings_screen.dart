@@ -6,7 +6,6 @@ import '../../../core/constants/app_constants.dart';
 import '../../../providers/habit_provider.dart';
 import '../../../providers/theme_provider.dart';
 import '../../widgets/common/glass_container.dart';
-import '../../widgets/common/gradient_button.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});

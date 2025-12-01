@@ -42,7 +42,6 @@ class WeeklyChart extends StatelessWidget {
                 barTouchData: BarTouchData(
                   enabled: true,
                   touchTooltipData: BarTouchTooltipData(
-                    getTooltipColor: (group) => AppColors.primaryPurple,
                     tooltipRoundedRadius: 8,
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
                       return BarTooltipItem(
@@ -143,7 +142,6 @@ class WeeklyChart extends StatelessWidget {
                   );
                 }),
               ),
-              duration: const Duration(milliseconds: 500),
             ),
           ),
         ],
