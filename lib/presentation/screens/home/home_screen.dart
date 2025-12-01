@@ -421,7 +421,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showLevelDetails(BuildContext context, HabitProvider provider) {
     HapticFeedback.mediumImpact();
     
-    final xpForNextLevel = 100 - (provider.totalXP % 100);
+    final xpForNextLevel = AppConstants.xpPerLevel - (provider.totalXP % AppConstants.xpPerLevel);
     final nextLevel = provider.level + 1;
     
     showModalBottomSheet(
@@ -624,10 +624,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Icon(Icons.celebration, color: Colors.white),
-                    SizedBox(width: 8),
-                    Text(
+                  children: [
+                    const Icon(Icons.celebration, color: Colors.white),
+                    const SizedBox(width: 8),
+                    const Text(
                       '🎉 Perfect day!',
                       style: TextStyle(
                         fontSize: 18,

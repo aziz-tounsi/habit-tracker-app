@@ -13,17 +13,29 @@ class MotivationalQuoteCard extends StatefulWidget {
 
 class _MotivationalQuoteCardState extends State<MotivationalQuoteCard> {
   late String _quote;
+  late int _lastIndex;
 
   @override
   void initState() {
     super.initState();
+    _lastIndex = -1;
     _quote = _getRandomQuote();
   }
 
   String _getRandomQuote() {
     final random = Random();
-    final index = random.nextInt(AppConstants.motivationalQuotes.length);
-    return AppConstants.motivationalQuotes[index];
+    final quotes = AppConstants.motivationalQuotes;
+    
+    if (quotes.length == 1) return quotes[0];
+    
+    // Ensure we don't show the same quote twice in a row
+    int index;
+    do {
+      index = random.nextInt(quotes.length);
+    } while (index == _lastIndex);
+    
+    _lastIndex = index;
+    return quotes[index];
   }
 
   void _refreshQuote() {

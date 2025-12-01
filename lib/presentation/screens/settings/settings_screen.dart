@@ -347,34 +347,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     },
                   ),
                 ),
-                const Divider(height: 1),
-                _buildSettingsTile(
-                  context,
-                  icon: Icons.vibration,
-                  title: 'Haptic Feedback',
-                  subtitle: 'Vibration on interactions',
-                  trailing: Switch(
-                    value: true,
-                    onChanged: (value) {
-                      HapticFeedback.mediumImpact();
-                      // This could be saved to preferences if needed
-                    },
-                  ),
-                ),
-                const Divider(height: 1),
-                _buildSettingsTile(
-                  context,
-                  icon: Icons.volume_up,
-                  title: 'Sound Effects',
-                  subtitle: 'Play sounds on achievements',
-                  trailing: Switch(
-                    value: false,
-                    onChanged: (value) {
-                      HapticFeedback.lightImpact();
-                      // This could be saved to preferences if needed
-                    },
-                  ),
-                ),
               ],
             ),
           ),
