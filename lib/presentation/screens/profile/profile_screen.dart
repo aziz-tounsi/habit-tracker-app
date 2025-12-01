@@ -2,13 +2,41 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../providers/habit_provider.dart';
 import '../../widgets/common/glass_container.dart';
 import '../../widgets/common/galaxy_background.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  String _userName = 'User';
+  String _userAvatar = '😊';
+  DateTime? _joinDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _userName = prefs.getString('user_name') ?? 'User';
+      _userAvatar = prefs.getString('user_avatar') ?? '😊';
+      final joinDateStr = prefs.getString('join_date');
+      if (joinDateStr != null) {
+        _joinDate = DateTime.parse(joinDateStr);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +91,7 @@ class ProfileScreen extends StatelessWidget {
                           ),
                           child: Center(
                             child: Text(
-                              user?.avatarEmoji ?? '😊',
+                              _userAvatar,
                               style: const TextStyle(fontSize: 48),
                             ),
                           ),
@@ -71,7 +99,7 @@ class ProfileScreen extends StatelessWidget {
                         const SizedBox(height: 16),
                         // Name
                         Text(
-                          user?.name ?? 'User',
+                          _userName,
                           style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -242,9 +270,11 @@ class ProfileScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                user?.createdAt != null
-                                    ? _formatDate(user!.createdAt)
-                                    : 'Just now',
+                                _joinDate != null
+                                    ? _formatDate(_joinDate!)
+                                    : (user?.createdAt != null
+                                        ? _formatDate(user!.createdAt)
+                                        : 'Just now'),
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/constants/suggestions.dart';
 import '../../../data/models/habit_model.dart';
 import '../../../providers/habit_provider.dart';
 import '../../widgets/common/gradient_button.dart';
@@ -120,20 +121,10 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Name input
+              // Name input with autocomplete
               FadeInUp(
                 duration: const Duration(milliseconds: 400),
-                child: _buildTextField(
-                  controller: _nameController,
-                  label: 'Habit Name',
-                  hint: 'e.g., Morning Exercise',
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter a habit name';
-                    }
-                    return null;
-                  },
-                ),
+                child: _buildHabitNameField(),
               ),
               const SizedBox(height: 20),
               // Description input
@@ -208,6 +199,146 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildHabitNameField() {
+    // Combine good and bad habits for suggestions
+    final allHabits = [
+      ...HabitSuggestions.goodHabits.map((h) => {...h, 'isQuit': false}),
+      ...HabitSuggestions.badHabits.map((h) => {...h, 'isQuit': true}),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Habit Name',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Autocomplete<Map<String, dynamic>>(
+          optionsBuilder: (TextEditingValue textEditingValue) {
+            if (textEditingValue.text.isEmpty) {
+              return const Iterable<Map<String, dynamic>>.empty();
+            }
+            return allHabits.where((habit) {
+              return (habit['name'] as String)
+                  .toLowerCase()
+                  .contains(textEditingValue.text.toLowerCase());
+            });
+          },
+          displayStringForOption: (Map<String, dynamic> option) =>
+              option['name'] as String,
+          onSelected: (Map<String, dynamic> selection) {
+            _nameController.text = selection['name'] as String;
+            // Auto-populate category
+            if (selection['category'] != null) {
+              setState(() {
+                _selectedCategory = selection['category'] as String;
+              });
+            }
+          },
+          fieldViewBuilder: (BuildContext context,
+              TextEditingController fieldController,
+              FocusNode focusNode,
+              VoidCallback onFieldSubmitted) {
+            // Sync with our main controller
+            fieldController.text = _nameController.text;
+            fieldController.addListener(() {
+              _nameController.text = fieldController.text;
+            });
+
+            return TextFormField(
+              controller: fieldController,
+              focusNode: focusNode,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Please enter a habit name';
+                }
+                return null;
+              },
+              decoration: const InputDecoration(
+                hintText: 'e.g., Morning Exercise',
+              ),
+            );
+          },
+          optionsViewBuilder: (BuildContext context,
+              AutocompleteOnSelected<Map<String, dynamic>> onSelected,
+              Iterable<Map<String, dynamic>> options) {
+            return Align(
+              alignment: Alignment.topLeft,
+              child: Material(
+                elevation: 4.0,
+                borderRadius: BorderRadius.circular(12),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 200, maxWidth: 300),
+                  child: ListView.builder(
+                    padding: EdgeInsets.zero,
+                    shrinkWrap: true,
+                    itemCount: options.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      final option = options.elementAt(index);
+                      final isQuit = option['isQuit'] as bool? ?? false;
+                      return InkWell(
+                        onTap: () => onSelected(option),
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withAlpha(25),
+                              ),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Text(
+                                option['icon'] as String,
+                                style: const TextStyle(fontSize: 20),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      option['name'] as String,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    Text(
+                                      '${option['category']} ${isQuit ? '(Quit)' : '(Build)'}',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withAlpha(153),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 

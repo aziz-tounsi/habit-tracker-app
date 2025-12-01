@@ -49,6 +49,18 @@ class HabitModel extends HiveObject {
   @HiveField(14)
   List<String> completedDates; // List of yyyy-MM-dd strings
 
+  @HiveField(15)
+  bool isQuitHabit; // true = quitting bad habit, false = building good habit
+
+  @HiveField(16)
+  DateTime? quitStartDate; // When user started quitting (for timer)
+
+  @HiveField(17)
+  double? moneySavedPerDay; // For habits like smoking (optional)
+
+  @HiveField(18)
+  List<DateTime>? relapses; // Times user slipped (optional)
+
   HabitModel({
     required this.id,
     required this.name,
@@ -65,6 +77,10 @@ class HabitModel extends HiveObject {
     this.longestStreak = 0,
     this.totalCompletions = 0,
     List<String>? completedDates,
+    this.isQuitHabit = false,
+    this.quitStartDate,
+    this.moneySavedPerDay,
+    this.relapses,
   }) : completedDates = completedDates ?? [];
 
   bool isCompletedOn(String dateKey) {
@@ -171,6 +187,10 @@ class HabitModel extends HiveObject {
     int? longestStreak,
     int? totalCompletions,
     List<String>? completedDates,
+    bool? isQuitHabit,
+    DateTime? quitStartDate,
+    double? moneySavedPerDay,
+    List<DateTime>? relapses,
   }) {
     return HabitModel(
       id: id ?? this.id,
@@ -188,6 +208,10 @@ class HabitModel extends HiveObject {
       longestStreak: longestStreak ?? this.longestStreak,
       totalCompletions: totalCompletions ?? this.totalCompletions,
       completedDates: completedDates ?? List.from(this.completedDates),
+      isQuitHabit: isQuitHabit ?? this.isQuitHabit,
+      quitStartDate: quitStartDate ?? this.quitStartDate,
+      moneySavedPerDay: moneySavedPerDay ?? this.moneySavedPerDay,
+      relapses: relapses ?? (this.relapses != null ? List.from(this.relapses!) : null),
     );
   }
 

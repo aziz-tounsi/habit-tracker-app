@@ -146,7 +146,22 @@ class _HabitCardState extends State<HabitCard>
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          if (widget.habit.currentStreak > 0) ...[
+                          if (widget.habit.isQuitHabit && widget.habit.quitStartDate != null) ...[
+                            Icon(
+                              Icons.timer,
+                              size: 16,
+                              color: AppColors.accentGreen,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${DateTime.now().difference(widget.habit.quitStartDate!).inDays} days clean',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppColors.accentGreen,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ] else if (widget.habit.currentStreak > 0) ...[
                             Icon(
                               Icons.local_fire_department,
                               size: 16,

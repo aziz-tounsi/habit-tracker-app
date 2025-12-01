@@ -54,9 +54,61 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Future<void> _completeOnboarding() async {
     final onboardingProvider = context.read<OnboardingProvider>();
     await onboardingProvider.saveOnboardingData();
-    if (mounted) {
-      await context.read<HabitProvider>().completeOnboarding();
+    
+    // Create habits from selections
+    final habitProvider = context.read<HabitProvider>();
+    
+    // Get selected habits from onboarding provider
+    final selectedGoodHabits = onboardingProvider.selectedGoodHabits;
+    final selectedBadHabits = onboardingProvider.selectedBadHabits;
+    
+    // Add GOOD habits (to build)
+    for (final habitName in selectedGoodHabits) {
+      final habit = HabitSuggestions.goodHabits.firstWhere(
+        (h) => h['name'] == habitName,
+        orElse: () => {'name': habitName, 'icon': '✨', 'category': 'General'},
+      );
+      
+      await habitProvider.addHabit(
+        name: habit['name'] as String,
+        iconIndex: _getIconIndex(habit['icon'] as String),
+        colorIndex: 0,
+        category: habit['category'] as String,
+        scheduledDays: [0, 1, 2, 3, 4, 5, 6], // Every day
+        targetDaysPerWeek: 7,
+        isQuitHabit: false,
+      );
     }
+    
+    // Add BAD habits (to quit)
+    for (final habitName in selectedBadHabits) {
+      final habit = HabitSuggestions.badHabits.firstWhere(
+        (h) => h['name'] == habitName,
+        orElse: () => {'name': habitName, 'icon': '🚫', 'category': 'General', 'moneyPerDay': 0.0},
+      );
+      
+      await habitProvider.addHabit(
+        name: habit['name'] as String,
+        iconIndex: _getIconIndex(habit['icon'] as String),
+        colorIndex: 1,
+        category: habit['category'] as String,
+        scheduledDays: [0, 1, 2, 3, 4, 5, 6],
+        targetDaysPerWeek: 7,
+        isQuitHabit: true,
+        quitStartDate: DateTime.now(),
+        moneySavedPerDay: (habit['moneyPerDay'] as num?)?.toDouble(),
+      );
+    }
+    
+    if (mounted) {
+      await habitProvider.completeOnboarding();
+    }
+  }
+
+  int _getIconIndex(String emoji) {
+    // Map emoji to icon index (simple hash for now)
+    // In a real app, you'd want a proper mapping
+    return emoji.hashCode % 20;
   }
 
   @override
@@ -437,7 +489,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   crossAxisCount: 2,
                   mainAxisSpacing: 12,
                   crossAxisSpacing: 12,
-                  childAspectRatio: 1.2,
+                  childAspectRatio: 1.4,
                 ),
                 itemCount: HabitSuggestions.goodHabits.length,
                 itemBuilder: (context, index) {
@@ -448,9 +500,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     onTap: () => provider.toggleGoodHabit(habit['name']!),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(12),
                         color: isSelected
                             ? AppColors.accentGreen.withAlpha(102)
                             : Colors.white.withAlpha(25),
@@ -462,19 +514,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                       ),
                       child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
                             habit['icon']!,
-                            style: const TextStyle(fontSize: 32),
+                            style: const TextStyle(fontSize: 28),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 4),
                           Text(
                             habit['name']!,
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 13,
+                              fontSize: 11,
                               fontWeight: FontWeight.w500,
                             ),
                             maxLines: 2,
@@ -482,11 +535,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           ),
                           if (isSelected)
                             const Padding(
-                              padding: EdgeInsets.only(top: 4),
+                              padding: EdgeInsets.only(top: 2),
                               child: Icon(
                                 Icons.check_circle,
                                 color: AppColors.accentGreen,
-                                size: 16,
+                                size: 14,
                               ),
                             ),
                         ],
@@ -543,7 +596,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   crossAxisCount: 2,
                   mainAxisSpacing: 12,
                   crossAxisSpacing: 12,
-                  childAspectRatio: 1.2,
+                  childAspectRatio: 1.4,
                 ),
                 itemCount: HabitSuggestions.badHabits.length,
                 itemBuilder: (context, index) {
@@ -554,9 +607,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     onTap: () => provider.toggleBadHabit(habit['name']!),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(12),
                         color: isSelected
                             ? AppColors.error.withAlpha(102)
                             : Colors.white.withAlpha(25),
@@ -567,19 +620,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                       ),
                       child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
                             habit['icon']!,
-                            style: const TextStyle(fontSize: 32),
+                            style: const TextStyle(fontSize: 28),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 4),
                           Text(
                             habit['name']!,
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 13,
+                              fontSize: 11,
                               fontWeight: FontWeight.w500,
                             ),
                             maxLines: 2,
@@ -587,11 +641,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           ),
                           if (isSelected)
                             const Padding(
-                              padding: EdgeInsets.only(top: 4),
+                              padding: EdgeInsets.only(top: 2),
                               child: Icon(
                                 Icons.check_circle,
                                 color: AppColors.error,
-                                size: 16,
+                                size: 14,
                               ),
                             ),
                         ],

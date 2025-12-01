@@ -99,6 +99,9 @@ class HabitProvider extends ChangeNotifier {
     required List<int> scheduledDays,
     required int targetDaysPerWeek,
     String? reminderTime,
+    bool isQuitHabit = false,
+    DateTime? quitStartDate,
+    double? moneySavedPerDay,
   }) async {
     final habit = HabitModel(
       id: Helpers.generateId(),
@@ -111,6 +114,9 @@ class HabitProvider extends ChangeNotifier {
       targetDaysPerWeek: targetDaysPerWeek,
       createdAt: DateTime.now(),
       reminderTime: reminderTime,
+      isQuitHabit: isQuitHabit,
+      quitStartDate: quitStartDate,
+      moneySavedPerDay: moneySavedPerDay,
     );
 
     await _repository.addHabit(habit);
@@ -123,6 +129,27 @@ class HabitProvider extends ChangeNotifier {
         habitName: habit.name,
         time: reminderTime,
         days: scheduledDays,
+      );
+    }
+
+    // Check for new achievements
+    await _checkAchievements();
+    
+    notifyListeners();
+  }
+
+  // Add habit from model (useful for onboarding)
+  Future<void> addHabitFromModel(HabitModel habit) async {
+    await _repository.addHabit(habit);
+    _habits = _repository.getAllHabits();
+
+    // Schedule notification if reminder time is set
+    if (habit.reminderTime != null && _user?.notificationsEnabled == true) {
+      await _notificationService.scheduleHabitReminder(
+        id: habit.id.hashCode,
+        habitName: habit.name,
+        time: habit.reminderTime!,
+        days: habit.scheduledDays,
       );
     }
 
