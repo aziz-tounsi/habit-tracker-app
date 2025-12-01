@@ -78,6 +78,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: _buildNotificationsSection(context, habitProvider, user),
               ),
               const SizedBox(height: 24),
+              // Data section
+              FadeInUp(
+                duration: const Duration(milliseconds: 500),
+                delay: const Duration(milliseconds: 350),
+                child: _buildDataSection(context, habitProvider),
+              ),
+              const SizedBox(height: 24),
               // About section
               FadeInUp(
                 duration: const Duration(milliseconds: 500),
@@ -347,6 +354,94 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     },
                   ),
                 ),
+                const Divider(height: 1),
+                _buildSettingsTile(
+                  context,
+                  icon: Icons.nightlight_round,
+                  title: 'Quiet Hours',
+                  subtitle: '10:00 PM - 8:00 AM',
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    // TODO: Implement quiet hours picker
+                  },
+                ),
+                const Divider(height: 1),
+                _buildSettingsTile(
+                  context,
+                  icon: Icons.vibration,
+                  title: 'Sounds & Haptics',
+                  subtitle: 'Enabled',
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    // TODO: Implement sounds settings
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDataSection(
+    BuildContext context,
+    HabitProvider habitProvider,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Data & Privacy',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          GlassContainer(
+            padding: const EdgeInsets.all(4),
+            child: Column(
+              children: [
+                _buildSettingsTile(
+                  context,
+                  icon: Icons.upload_file,
+                  title: 'Export Data',
+                  subtitle: 'Backup your habits',
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    _showComingSoonDialog(context);
+                  },
+                ),
+                const Divider(height: 1),
+                _buildSettingsTile(
+                  context,
+                  icon: Icons.download,
+                  title: 'Import Data',
+                  subtitle: 'Restore from backup',
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    _showComingSoonDialog(context);
+                  },
+                ),
+                const Divider(height: 1),
+                _buildSettingsTile(
+                  context,
+                  icon: Icons.delete_forever,
+                  title: 'Clear All Data',
+                  subtitle: 'Reset everything',
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    HapticFeedback.mediumImpact();
+                    _showClearDataDialog(context, habitProvider);
+                  },
+                ),
               ],
             ),
           ),
@@ -385,6 +480,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   icon: Icons.code,
                   title: 'Made with ❤️',
                   subtitle: 'Flutter & Dart',
+                ),
+                const Divider(height: 1),
+                _buildSettingsTile(
+                  context,
+                  icon: Icons.star_rate,
+                  title: 'Rate App',
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    _showComingSoonDialog(context);
+                  },
+                ),
+                const Divider(height: 1),
+                _buildSettingsTile(
+                  context,
+                  icon: Icons.share,
+                  title: 'Share App',
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    _showComingSoonDialog(context);
+                  },
                 ),
               ],
             ),
@@ -554,6 +671,63 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         );
       },
+    );
+  }
+
+  void _showComingSoonDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.info_outline, color: AppColors.primaryPurple),
+            SizedBox(width: 12),
+            Text('Coming Soon'),
+          ],
+        ),
+        content: const Text('This feature is coming in a future update!'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showClearDataDialog(BuildContext context, HabitProvider provider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning, color: Color(0xFFEF4444)),
+            SizedBox(width: 12),
+            Text('Clear All Data?'),
+          ],
+        ),
+        content: const Text(
+          'This will delete all your habits, progress, and achievements. This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // TODO: Implement clear all data
+              _showComingSoonDialog(context);
+            },
+            style: TextButton.styleFrom(foregroundColor: const Color(0xFFEF4444)),
+            child: const Text('Clear All'),
+          ),
+        ],
+      ),
     );
   }
 }
