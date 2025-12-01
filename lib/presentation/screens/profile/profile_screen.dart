@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/constants/currencies.dart';
 import '../../../providers/habit_provider.dart';
 import '../../widgets/common/glass_container.dart';
 import '../../widgets/common/galaxy_background.dart';
@@ -19,6 +20,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _userName = 'User';
   String _userAvatar = '😊';
   DateTime? _joinDate;
+  Currency _selectedCurrency = Currencies.defaultCurrency;
 
   @override
   void initState() {
@@ -35,6 +37,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (joinDateStr != null) {
         _joinDate = DateTime.parse(joinDateStr);
       }
+      final currencyCode = prefs.getString('selected_currency') ?? 'USD';
+      _selectedCurrency = Currencies.getByCode(currencyCode);
     });
   }
 
@@ -289,7 +293,70 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 100),
+              const SizedBox(height: 24),
+              // Currency Selector
+              FadeInUp(
+                duration: const Duration(milliseconds: 500),
+                delay: const Duration(milliseconds: 400),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Currency',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      GlassContainer(
+                        padding: const EdgeInsets.all(20),
+                        onTap: () => _showCurrencyPicker(),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                gradient: AppColors.greenCyanGradient,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(Icons.monetization_on, color: Colors.white, size: 24),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Selected Currency',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '${_selectedCurrency.symbol} ${_selectedCurrency.name}',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Theme.of(context).colorScheme.onSurface,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Icon(Icons.arrow_forward_ios, size: 16),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         );
@@ -353,5 +420,64 @@ class _ProfileScreenState extends State<ProfileScreen> {
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
     ];
     return '${months[date.month - 1]} ${date.day}, ${date.year}';
+  }
+
+  Future<void> _showCurrencyPicker() async {
+    final selected = await showDialog<Currency>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Select Currency'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: Currencies.all.length,
+            itemBuilder: (context, index) {
+              final currency = Currencies.all[index];
+              final isSelected = currency.code == _selectedCurrency.code;
+              return ListTile(
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    gradient: isSelected ? AppColors.greenCyanGradient : null,
+                    color: isSelected ? null : Theme.of(context).colorScheme.onSurface.withAlpha(13),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Center(
+                    child: Text(
+                      currency.symbol,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
+                ),
+                title: Text(currency.name),
+                subtitle: Text(currency.code),
+                trailing: isSelected ? const Icon(Icons.check, color: Colors.green) : null,
+                onTap: () => Navigator.pop(context, currency),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+
+    if (selected != null) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('selected_currency', selected.code);
+      setState(() {
+        _selectedCurrency = selected;
+      });
+    }
   }
 }

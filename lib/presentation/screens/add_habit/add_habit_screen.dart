@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
-import '../../../core/constants/suggestions.dart';
+import '../../../core/constants/habit_suggestions.dart';
+import '../../../core/constants/bad_habit_configs.dart';
+import '../../../core/constants/currencies.dart';
 import '../../../data/models/habit_model.dart';
 import '../../../providers/habit_provider.dart';
 import '../../widgets/common/gradient_button.dart';
@@ -33,6 +36,9 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
   bool _isLoading = false;
   late FocusNode _nameFocusNode;
   bool _isQuitHabit = false;
+  BadHabitConfig? _selectedBadHabitConfig;
+  Map<String, dynamic> _badHabitValues = {};
+  String _currencySymbol = '\$';
 
   bool get isEditing => widget.habitToEdit != null;
 
@@ -40,6 +46,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
   void initState() {
     super.initState();
     _nameFocusNode = FocusNode();
+    _loadCurrency();
     if (isEditing) {
       _nameController.text = widget.habitToEdit!.name;
       _descriptionController.text = widget.habitToEdit!.description ?? '';
@@ -62,6 +69,15 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
     }
   }
 
+  Future<void> _loadCurrency() async {
+    final prefs = await SharedPreferences.getInstance();
+    final currencyCode = prefs.getString('selected_currency') ?? 'USD';
+    final currency = Currencies.getByCode(currencyCode);
+    setState(() {
+      _currencySymbol = currency.symbol;
+    });
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -81,9 +97,13 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
         ? '${_reminderTime!.hour.toString().padLeft(2, '0')}:${_reminderTime!.minute.toString().padLeft(2, '0')}'
         : null;
 
-    final moneySaved = _moneySavedController.text.trim().isEmpty
-        ? null
-        : double.tryParse(_moneySavedController.text.trim());
+    // Calculate money saved based on bad habit config or use manual input
+    double? moneySaved;
+    if (_isQuitHabit && _selectedBadHabitConfig != null) {
+      moneySaved = _selectedBadHabitConfig!.calculate(_badHabitValues);
+    } else if (_moneySavedController.text.trim().isNotEmpty) {
+      moneySaved = double.tryParse(_moneySavedController.text.trim());
+    }
 
     if (isEditing) {
       final updatedHabit = widget.habitToEdit!.copyWith(
@@ -165,8 +185,11 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              // Money saved field (only for quit habits)
-              if (_isQuitHabit)
+              // Smart bad habit fields (based on config)
+              if (_isQuitHabit && _selectedBadHabitConfig != null)
+                ..._buildBadHabitFields(),
+              // Money saved field (only for quit habits without smart config)
+              if (_isQuitHabit && _selectedBadHabitConfig == null)
                 FadeInUp(
                   duration: const Duration(milliseconds: 400),
                   delay: const Duration(milliseconds: 250),
@@ -250,11 +273,10 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
   }
 
   Widget _buildHabitNameField() {
-    // Combine good and bad habits for suggestions
-    final allHabits = [
-      ...HabitSuggestions.goodHabits.map((h) => {...h, 'isQuit': false}),
-      ...HabitSuggestions.badHabits.map((h) => {...h, 'isQuit': true}),
-    ];
+    // Filter suggestions based on habit type
+    final suggestions = _isQuitHabit
+        ? HabitSuggestions.badHabits.map((h) => h.toMap()).toList()
+        : HabitSuggestions.goodHabits.map((h) => h.toMap()).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -274,7 +296,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
             if (textEditingValue.text.isEmpty) {
               return const Iterable<Map<String, dynamic>>.empty();
             }
-            return allHabits.where((habit) {
+            return suggestions.where((habit) {
               return (habit['name'] as String)
                   .toLowerCase()
                   .contains(textEditingValue.text.toLowerCase());
@@ -288,6 +310,19 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
             if (selection['category'] != null) {
               setState(() {
                 _selectedCategory = selection['category'] as String;
+              });
+            }
+            // Check if this is a bad habit with a smart config
+            if (_isQuitHabit && selection['configType'] != null) {
+              final configType = selection['configType'] as String;
+              setState(() {
+                _selectedBadHabitConfig = BadHabitConfigs.configs[configType];
+                _badHabitValues = {};
+              });
+            } else {
+              setState(() {
+                _selectedBadHabitConfig = null;
+                _badHabitValues = {};
               });
             }
           },
@@ -304,8 +339,30 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                 }
                 return null;
               },
-              decoration: const InputDecoration(
-                hintText: 'e.g., Morning Exercise',
+              onChanged: (value) {
+                // Auto-suggest categories based on name
+                final suggestedCategories = HabitSuggestions.suggestCategories(value);
+                if (suggestedCategories.isNotEmpty && 
+                    AppConstants.habitCategories.contains(suggestedCategories.first)) {
+                  setState(() {
+                    _selectedCategory = suggestedCategories.first;
+                  });
+                }
+                // Try to detect bad habit config
+                if (_isQuitHabit) {
+                  final config = BadHabitConfigs.getConfig(value);
+                  if (config != null) {
+                    setState(() {
+                      _selectedBadHabitConfig = config;
+                      _badHabitValues = {};
+                    });
+                  }
+                }
+              },
+              decoration: InputDecoration(
+                hintText: _isQuitHabit
+                    ? 'e.g., Smoking, Social Media'
+                    : 'e.g., Morning Exercise',
               ),
             );
           },
@@ -325,7 +382,6 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                     itemCount: options.length,
                     itemBuilder: (BuildContext context, int index) {
                       final option = options.elementAt(index);
-                      final isQuit = option['isQuit'] as bool? ?? false;
                       return InkWell(
                         onTap: () => onSelected(option),
                         child: Container(
@@ -342,9 +398,9 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                           ),
                           child: Row(
                             children: [
-                              Text(
-                                option['icon'] as String,
-                                style: const TextStyle(fontSize: 20),
+                              Icon(
+                                option['icon'] as IconData,
+                                size: 20,
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -358,7 +414,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                                       ),
                                     ),
                                     Text(
-                                      '${option['category']} ${isQuit ? '(Quit)' : '(Build)'}',
+                                      '${option['category']} ${_isQuitHabit ? '(Quit)' : '(Build)'}',
                                       style: TextStyle(
                                         fontSize: 11,
                                         color: Theme.of(context)
@@ -854,5 +910,102 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
         ),
       ],
     );
+  }
+
+  List<Widget> _buildBadHabitFields() {
+    if (_selectedBadHabitConfig == null) return [];
+
+    final fields = <Widget>[];
+    int delay = 250;
+
+    for (var field in _selectedBadHabitConfig!.fields) {
+      delay += 50;
+      
+      if (field.type == BadHabitFieldType.dropdown) {
+        fields.add(
+          FadeInUp(
+            duration: const Duration(milliseconds: 400),
+            delay: Duration(milliseconds: delay),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  field.label,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  value: _badHabitValues[field.key] as String?,
+                  items: field.options!.map((option) {
+                    return DropdownMenuItem(
+                      value: option,
+                      child: Text(option),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _badHabitValues[field.key] = value;
+                    });
+                  },
+                  decoration: InputDecoration(
+                    hintText: field.hint,
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
+            ),
+          ),
+        );
+      } else {
+        fields.add(
+          FadeInUp(
+            duration: const Duration(milliseconds: 400),
+            delay: Duration(milliseconds: delay),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  field.label,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextFormField(
+                  initialValue: _badHabitValues[field.key]?.toString() ?? '',
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    final parsed = double.tryParse(value);
+                    setState(() {
+                      _badHabitValues[field.key] = parsed ?? 0.0;
+                    });
+                  },
+                  decoration: InputDecoration(
+                    hintText: field.hint,
+                    prefixText: field.type == BadHabitFieldType.money ? _currencySymbol : null,
+                  ),
+                  validator: (value) {
+                    if (value != null && value.isNotEmpty) {
+                      final parsed = double.tryParse(value);
+                      if (parsed == null || parsed < 0) {
+                        return 'Please enter a valid positive number';
+                      }
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 20),
+              ],
+            ),
+          ),
+        );
+      }
+    }
+
+    return fields;
   }
 }

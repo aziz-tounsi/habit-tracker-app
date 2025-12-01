@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:confetti/confetti.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/constants/suggestions.dart';
+import '../../../core/constants/habit_suggestions.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../providers/habit_provider.dart';
 import '../../../providers/onboarding_provider.dart';
@@ -64,7 +64,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     for (final habitName in selectedGoodHabits) {
       await _addHabitFromSelection(
         habitName: habitName,
-        habitList: HabitSuggestions.goodHabits,
+        habitList: HabitSuggestions.goodHabits.map((h) => h.toMap()).toList(),
         isQuit: false,
         colorIndex: 0,
       );
@@ -74,7 +74,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     for (final habitName in selectedBadHabits) {
       await _addHabitFromSelection(
         habitName: habitName,
-        habitList: HabitSuggestions.badHabits,
+        habitList: HabitSuggestions.badHabits.map((h) => h.toMap()).toList(),
         isQuit: true,
         colorIndex: 1,
       );
@@ -85,11 +85,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
 
-  int _getIconIndex(String emoji) {
-    // Map emoji to a valid icon index
-    // Use hashCode and ensure it's within valid range of available icons
-    final iconCount = AppConstants.habitIcons.length;
-    return (emoji.hashCode.abs() % iconCount).toInt();
+  int _getIconIndex(IconData icon) {
+    // Find the index of this icon in AppConstants.habitIcons
+    final index = AppConstants.habitIcons.indexOf(icon);
+    // If not found, return a default index
+    return index >= 0 ? index : 0;
   }
 
   Future<void> _addHabitFromSelection({
@@ -109,14 +109,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final habitProvider = context.read<HabitProvider>();
     await habitProvider.addHabit(
       name: habitData['name'] as String,
-      iconIndex: _getIconIndex(habitData['icon'] as String),
+      iconIndex: _getIconIndex(habitData['icon'] as IconData),
       colorIndex: colorIndex,
       category: habitData['category'] as String,
       scheduledDays: [0, 1, 2, 3, 4, 5, 6], // Every day
       targetDaysPerWeek: 7,
       isQuitHabit: isQuit,
       quitStartDate: isQuit ? DateTime.now() : null,
-      moneySavedPerDay: isQuit ? (habitData['moneyPerDay'] as num?)?.toDouble() : null,
+      moneySavedPerDay: null, // We don't set default money values anymore
     );
   }
 
@@ -339,9 +339,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   mainAxisSpacing: 12,
                   crossAxisSpacing: 12,
                 ),
-                itemCount: HabitSuggestions.avatarEmojis.length,
+                itemCount: AppConstants.avatarEmojis.length,
                 itemBuilder: (context, index) {
-                  final emoji = HabitSuggestions.avatarEmojis[index];
+                  final emoji = AppConstants.avatarEmojis[index];
                   final isSelected = provider.userAvatar == emoji;
                   return GestureDetector(
                     onTap: () => provider.setUserAvatar(emoji),
@@ -503,10 +503,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 itemCount: HabitSuggestions.goodHabits.length,
                 itemBuilder: (context, index) {
                   final habit = HabitSuggestions.goodHabits[index];
+                  final habitMap = habit.toMap();
                   final isSelected =
-                      provider.selectedGoodHabits.contains(habit['name']);
+                      provider.selectedGoodHabits.contains(habit.name);
                   return GestureDetector(
-                    onTap: () => provider.toggleGoodHabit(habit['name']!),
+                    onTap: () => provider.toggleGoodHabit(habit.name),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
@@ -526,13 +527,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         mainAxisSize: MainAxisSize.min,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            habit['icon']!,
-                            style: const TextStyle(fontSize: 28),
+                          Icon(
+                            habit.icon,
+                            size: 28,
+                            color: Colors.white,
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            habit['name']!,
+                            habit.name,
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               color: Colors.white,
@@ -611,9 +613,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 itemBuilder: (context, index) {
                   final habit = HabitSuggestions.badHabits[index];
                   final isSelected =
-                      provider.selectedBadHabits.contains(habit['name']);
+                      provider.selectedBadHabits.contains(habit.name);
                   return GestureDetector(
-                    onTap: () => provider.toggleBadHabit(habit['name']!),
+                    onTap: () => provider.toggleBadHabit(habit.name),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
@@ -632,13 +634,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         mainAxisSize: MainAxisSize.min,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            habit['icon']!,
-                            style: const TextStyle(fontSize: 28),
+                          Icon(
+                            habit.icon,
+                            size: 28,
+                            color: Colors.white,
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            habit['name']!,
+                            habit.name,
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               color: Colors.white,

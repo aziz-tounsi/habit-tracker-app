@@ -18,7 +18,9 @@ class _GalaxyBackgroundState extends State<GalaxyBackground>
   late AnimationController _starsController;
   late AnimationController _shootingStarController;
   late AnimationController _nebulaController;
+  late AnimationController _planetsController;
   final List<Star> _stars = [];
+  final List<Planet> _planets = [];
   final Random _random = Random();
   ShootingStar? _shootingStar;
 
@@ -26,8 +28,8 @@ class _GalaxyBackgroundState extends State<GalaxyBackground>
   void initState() {
     super.initState();
     
-    // Generate stars
-    for (int i = 0; i < 80; i++) {
+    // Generate stars (increased from 80 to 150)
+    for (int i = 0; i < 150; i++) {
       _stars.add(Star(
         x: _random.nextDouble(),
         y: _random.nextDouble(),
@@ -36,6 +38,29 @@ class _GalaxyBackgroundState extends State<GalaxyBackground>
         twinkleSpeed: 0.5 + _random.nextDouble() * 1.5,
       ));
     }
+
+    // Generate planets
+    _planets.add(Planet(
+      x: 0.15,
+      y: 0.2,
+      size: 60,
+      color: const Color(0xFF4A90E2),
+      glowColor: const Color(0xFF6BB6FF),
+    ));
+    _planets.add(Planet(
+      x: 0.75,
+      y: 0.65,
+      size: 40,
+      color: const Color(0xFFE24A90),
+      glowColor: const Color(0xFFFF6BB6),
+    ));
+    _planets.add(Planet(
+      x: 0.85,
+      y: 0.15,
+      size: 30,
+      color: const Color(0xFFA24AE2),
+      glowColor: const Color(0xFFB66BFF),
+    ));
 
     // Stars twinkle animation
     _starsController = AnimationController(
@@ -49,6 +74,12 @@ class _GalaxyBackgroundState extends State<GalaxyBackground>
       duration: const Duration(seconds: 20),
     )..repeat(reverse: true);
 
+    // Planets slow rotation
+    _planetsController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 30),
+    )..repeat();
+
     // Shooting stars
     _shootingStarController = AnimationController(
       vsync: this,
@@ -59,7 +90,8 @@ class _GalaxyBackgroundState extends State<GalaxyBackground>
   }
 
   void _scheduleShootingStar() {
-    Future.delayed(Duration(seconds: 5 + _random.nextInt(10)), () {
+    // More frequent shooting stars (3-8 seconds instead of 5-15)
+    Future.delayed(Duration(seconds: 3 + _random.nextInt(6)), () {
       if (mounted) {
         setState(() {
           _shootingStar = ShootingStar(
@@ -81,6 +113,7 @@ class _GalaxyBackgroundState extends State<GalaxyBackground>
     _starsController.dispose();
     _shootingStarController.dispose();
     _nebulaController.dispose();
+    _planetsController.dispose();
     super.dispose();
   }
 
@@ -88,29 +121,43 @@ class _GalaxyBackgroundState extends State<GalaxyBackground>
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // Deep space gradient background
+        // Deep space gradient background (darker colors)
         Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Color(0xFF0a0a1a),
-                Color(0xFF1a0a2e),
-                Color(0xFF0a0a1a),
+                Color(0xFF050510), // Deep space black
+                Color(0xFF0a0a1a), // Dark purple
+                Color(0xFF050510), // Deep space black
               ],
               stops: [0.0, 0.5, 1.0],
             ),
           ),
         ),
         
-        // Nebula clouds
+        // Nebula clouds (enhanced)
         AnimatedBuilder(
           animation: _nebulaController,
           builder: (context, child) {
             return CustomPaint(
               painter: NebulaPainter(
                 animationValue: _nebulaController.value,
+              ),
+              size: Size.infinite,
+            );
+          },
+        ),
+        
+        // Planets with glow
+        AnimatedBuilder(
+          animation: _planetsController,
+          builder: (context, child) {
+            return CustomPaint(
+              painter: PlanetsPainter(
+                planets: _planets,
+                animationValue: _planetsController.value,
               ),
               size: Size.infinite,
             );
@@ -228,7 +275,7 @@ class NebulaPainter extends CustomPainter {
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 100);
 
     // Purple nebula cloud
-    paint.color = const Color(0xFF7C3AED).withOpacity(0.1);
+    paint.color = const Color(0xFF7C3AED).withOpacity(0.15);
     canvas.drawCircle(
       Offset(
         size.width * 0.3 + (size.width * 0.1 * animationValue),
@@ -239,7 +286,7 @@ class NebulaPainter extends CustomPainter {
     );
 
     // Blue nebula cloud
-    paint.color = const Color(0xFF06B6D4).withOpacity(0.08);
+    paint.color = const Color(0xFF06B6D4).withOpacity(0.12);
     canvas.drawCircle(
       Offset(
         size.width * 0.7 - (size.width * 0.1 * animationValue),
@@ -250,13 +297,35 @@ class NebulaPainter extends CustomPainter {
     );
 
     // Pink nebula cloud
-    paint.color = const Color(0xFFEC4899).withOpacity(0.06);
+    paint.color = const Color(0xFFEC4899).withOpacity(0.1);
     canvas.drawCircle(
       Offset(
         size.width * 0.5,
         size.height * 0.4 + (size.height * 0.1 * animationValue),
       ),
       size.width * 0.35,
+      paint,
+    );
+
+    // Additional cyan nebula
+    paint.color = const Color(0xFF22D3EE).withOpacity(0.08);
+    canvas.drawCircle(
+      Offset(
+        size.width * 0.15 - (size.width * 0.05 * animationValue),
+        size.height * 0.75,
+      ),
+      size.width * 0.25,
+      paint,
+    );
+
+    // Additional violet nebula
+    paint.color = const Color(0xFF8B5CF6).withOpacity(0.1);
+    canvas.drawCircle(
+      Offset(
+        size.width * 0.85 + (size.width * 0.05 * animationValue),
+        size.height * 0.35,
+      ),
+      size.width * 0.28,
       paint,
     );
   }
@@ -340,4 +409,70 @@ class ParticlesPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(ParticlesPainter oldDelegate) => false;
+}
+
+class Planet {
+  final double x;
+  final double y;
+  final double size;
+  final Color color;
+  final Color glowColor;
+
+  Planet({
+    required this.x,
+    required this.y,
+    required this.size,
+    required this.color,
+    required this.glowColor,
+  });
+}
+
+class PlanetsPainter extends CustomPainter {
+  final List<Planet> planets;
+  final double animationValue;
+
+  PlanetsPainter({
+    required this.planets,
+    required this.animationValue,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (var planet in planets) {
+      final position = Offset(planet.x * size.width, planet.y * size.height);
+      
+      // Draw glow effect
+      final glowPaint = Paint()
+        ..color = planet.glowColor.withOpacity(0.3)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 20);
+      
+      canvas.drawCircle(position, planet.size * 1.5, glowPaint);
+      
+      // Draw planet
+      final planetPaint = Paint()
+        ..shader = RadialGradient(
+          colors: [
+            planet.color.withOpacity(0.8),
+            planet.color.withOpacity(0.4),
+          ],
+        ).createShader(Rect.fromCircle(center: position, radius: planet.size));
+      
+      canvas.drawCircle(position, planet.size, planetPaint);
+      
+      // Draw subtle rotation highlight
+      final highlightPaint = Paint()
+        ..color = Colors.white.withOpacity(0.2)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
+      
+      final highlightOffset = Offset(
+        position.dx - planet.size * 0.3 * cos(animationValue * 2 * pi),
+        position.dy - planet.size * 0.3 * sin(animationValue * 2 * pi),
+      );
+      
+      canvas.drawCircle(highlightOffset, planet.size * 0.3, highlightPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(PlanetsPainter oldDelegate) => true;
 }

@@ -23,7 +23,7 @@ dependencies:
   # Animations
   flutter_animate: ^4.3.0
   lottie: ^3.1.0
-  confetti_widget: ^0.7.0
+  confetti: ^0.7.0
   shimmer: ^3.0.0
   animate_do: ^3.1.2
   flutter_staggered_animations: ^1.1.1
