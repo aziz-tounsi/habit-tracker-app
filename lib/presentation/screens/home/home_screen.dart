@@ -13,6 +13,7 @@ import '../../widgets/common/animated_progress_ring.dart';
 import '../../widgets/common/profile_header.dart';
 import '../../widgets/common/level_progress.dart';
 import '../../widgets/common/motivational_quote_card.dart';
+import '../../widgets/common/galaxy_background.dart';
 import '../../widgets/habit/habit_list.dart';
 import '../../widgets/animations/scale_animation.dart';
 import '../add_habit/add_habit_screen.dart';
@@ -66,9 +67,10 @@ class _HomeScreenState extends State<HomeScreen> {
           });
         }
 
-        return Stack(
-          children: [
-            RefreshIndicator(
+        return GalaxyBackground(
+          child: Stack(
+            children: [
+              RefreshIndicator(
               onRefresh: () async {
                 await habitProvider.init();
               },
@@ -165,7 +167,8 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ],
-        );
+        ),
+      );
       },
     );
   }

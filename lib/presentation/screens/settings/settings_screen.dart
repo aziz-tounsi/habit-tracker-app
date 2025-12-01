@@ -7,6 +7,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../providers/habit_provider.dart';
 import '../../../providers/theme_provider.dart';
 import '../../widgets/common/glass_container.dart';
+import '../../widgets/common/galaxy_background.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -34,11 +35,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<HabitProvider, ThemeProvider>(
-      builder: (context, habitProvider, themeProvider, child) {
-        final user = habitProvider.user;
+    return GalaxyBackground(
+      child: Consumer2<HabitProvider, ThemeProvider>(
+        builder: (context, habitProvider, themeProvider, child) {
+          final user = habitProvider.user;
 
-        return SingleChildScrollView(
+          return SingleChildScrollView(
           padding: const EdgeInsets.symmetric(vertical: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

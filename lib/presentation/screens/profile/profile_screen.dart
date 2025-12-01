@@ -5,17 +5,19 @@ import 'package:animate_do/animate_do.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../providers/habit_provider.dart';
 import '../../widgets/common/glass_container.dart';
+import '../../widgets/common/galaxy_background.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<HabitProvider>(
-      builder: (context, habitProvider, child) {
-        final user = habitProvider.user;
+    return GalaxyBackground(
+      child: Consumer<HabitProvider>(
+        builder: (context, habitProvider, child) {
+          final user = habitProvider.user;
 
-        return SingleChildScrollView(
+          return SingleChildScrollView(
           padding: const EdgeInsets.symmetric(vertical: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -262,6 +264,7 @@ class ProfileScreen extends StatelessWidget {
           ),
         );
       },
+    ),
     );
   }
 
