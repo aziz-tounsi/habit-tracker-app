@@ -195,80 +195,90 @@ class AchievementsScreen extends StatelessWidget {
             ],
           );
 
-    return GlassContainer(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              gradient: gradient,
-              shape: BoxShape.circle,
-              boxShadow: isUnlocked
-                  ? [
-                      BoxShadow(
-                        color: AppColors.primaryPurple.withAlpha(76),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ]
-                  : null,
-            ),
-            child: Icon(
-              isUnlocked ? achievement.icon : Icons.lock,
-              color: Colors.white,
-              size: 28,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            achievement.name,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: isUnlocked
-                  ? Theme.of(context).colorScheme.onSurface
-                  : Theme.of(context).colorScheme.onSurface.withAlpha(102),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            achievement.description,
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 11,
-              color: Theme.of(context).colorScheme.onSurface.withAlpha(102),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              gradient: isUnlocked ? AppColors.greenCyanGradient : null,
-              color: isUnlocked
-                  ? null
-                  : Theme.of(context).colorScheme.onSurface.withAlpha(25),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(
-              '+${achievement.xpReward} XP',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                color: isUnlocked
-                    ? Colors.white
-                    : Theme.of(context).colorScheme.onSurface.withAlpha(102),
+    return GestureDetector(
+      onTap: () => _showAchievementDetails(context, achievement, isUnlocked),
+      child: GlassContainer(
+        padding: const EdgeInsets.all(12),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  gradient: gradient,
+                  shape: BoxShape.circle,
+                  boxShadow: isUnlocked
+                      ? [
+                          BoxShadow(
+                            color: AppColors.primaryPurple.withAlpha(76),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Icon(
+                  isUnlocked ? achievement.icon : Icons.lock,
+                  color: Colors.white,
+                  size: 24,
+                ),
               ),
-            ),
+              const SizedBox(height: 8),
+              Flexible(
+                child: Text(
+                  achievement.name,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: isUnlocked
+                        ? Theme.of(context).colorScheme.onSurface
+                        : Theme.of(context).colorScheme.onSurface.withAlpha(102),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Flexible(
+                child: Text(
+                  achievement.description,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 9,
+                    color: Theme.of(context).colorScheme.onSurface.withAlpha(102),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  gradient: isUnlocked ? AppColors.greenCyanGradient : null,
+                  color: isUnlocked
+                      ? null
+                      : Theme.of(context).colorScheme.onSurface.withAlpha(25),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '+${achievement.xpReward} XP',
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                    color: isUnlocked
+                        ? Colors.white
+                        : Theme.of(context).colorScheme.onSurface.withAlpha(102),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -284,146 +294,157 @@ class AchievementsScreen extends StatelessWidget {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Drag handle
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.onSurface.withAlpha(51),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 24),
-            // Icon
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                gradient: isUnlocked
-                    ? LinearGradient(
-                        colors: achievement.gradientColors,
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      )
-                    : LinearGradient(
-                        colors: [
-                          Colors.grey.withAlpha(76),
-                          Colors.grey.withAlpha(51),
-                        ],
-                      ),
-                shape: BoxShape.circle,
-                boxShadow: isUnlocked
-                    ? [
-                        BoxShadow(
-                          color: achievement.gradientColors.first.withAlpha(102),
-                          blurRadius: 20,
-                          offset: const Offset(0, 8),
-                        ),
-                      ]
-                    : null,
-              ),
-              child: Center(
-                child: isUnlocked
-                    ? Text(
-                        achievement.iconEmoji,
-                        style: const TextStyle(fontSize: 40),
-                      )
-                    : Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          ColorFiltered(
-                            colorFilter: const ColorFilter.mode(
-                              Colors.grey,
-                              BlendMode.saturation,
-                            ),
-                            child: Text(
-                              achievement.iconEmoji,
-                              style: const TextStyle(fontSize: 40),
-                            ),
-                          ),
-                          Icon(
-                            Icons.lock,
-                            color: Colors.white.withAlpha(204),
-                            size: 28,
-                          ),
-                        ],
-                      ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            // Name
-            Text(
-              achievement.name,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            // Description
-            Text(
-              achievement.description,
-              style: TextStyle(
-                fontSize: 14,
-                color: Theme.of(context).colorScheme.onSurface.withAlpha(153),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            // XP reward
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                gradient: isUnlocked ? AppColors.greenCyanGradient : null,
-                color: isUnlocked
-                    ? null
-                    : Theme.of(context).colorScheme.onSurface.withAlpha(25),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.star,
-                    color: isUnlocked ? Colors.white : Colors.grey,
-                    size: 20,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        builder: (context, scrollController) => Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: SingleChildScrollView(
+            controller: scrollController,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Drag handle
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.onSurface.withAlpha(51),
+                    borderRadius: BorderRadius.circular(2),
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '+${achievement.xpReward} XP',
+                ),
+                const SizedBox(height: 20),
+                // Icon
+                Container(
+                  width: 70,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    gradient: isUnlocked
+                        ? LinearGradient(
+                            colors: achievement.gradientColors,
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : LinearGradient(
+                            colors: [
+                              Colors.grey.withAlpha(76),
+                              Colors.grey.withAlpha(51),
+                            ],
+                          ),
+                    shape: BoxShape.circle,
+                    boxShadow: isUnlocked
+                        ? [
+                            BoxShadow(
+                              color: achievement.gradientColors.first.withAlpha(102),
+                              blurRadius: 20,
+                              offset: const Offset(0, 8),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Center(
+                    child: isUnlocked
+                        ? Text(
+                            achievement.iconEmoji,
+                            style: const TextStyle(fontSize: 36),
+                          )
+                        : Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              ColorFiltered(
+                                colorFilter: const ColorFilter.mode(
+                                  Colors.grey,
+                                  BlendMode.saturation,
+                                ),
+                                child: Text(
+                                  achievement.iconEmoji,
+                                  style: const TextStyle(fontSize: 36),
+                                ),
+                              ),
+                              Icon(
+                                Icons.lock,
+                                color: Colors.white.withAlpha(204),
+                                size: 24,
+                              ),
+                            ],
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Name
+                Text(
+                  achievement.name,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                // Description
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    achievement.description,
                     style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: isUnlocked
-                          ? Colors.white
-                          : Theme.of(context).colorScheme.onSurface.withAlpha(102),
+                      fontSize: 14,
+                      color: Theme.of(context).colorScheme.onSurface.withAlpha(153),
                     ),
+                    textAlign: TextAlign.center,
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 16),
+                // XP reward
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    gradient: isUnlocked ? AppColors.greenCyanGradient : null,
+                    color: isUnlocked
+                        ? null
+                        : Theme.of(context).colorScheme.onSurface.withAlpha(25),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.star,
+                        color: isUnlocked ? Colors.white : Colors.grey,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '+${achievement.xpReward} XP',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: isUnlocked
+                              ? Colors.white
+                              : Theme.of(context).colorScheme.onSurface.withAlpha(102),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // Status
+                Text(
+                  isUnlocked ? '✅ Unlocked' : '🔒 Locked',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isUnlocked ? Colors.green : Colors.grey,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
             ),
-            const SizedBox(height: 8),
-            // Status
-            Text(
-              isUnlocked ? '✅ Unlocked' : '🔒 Locked',
-              style: TextStyle(
-                fontSize: 14,
-                color: isUnlocked ? Colors.green : Colors.grey,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 24),
-          ],
+          ),
         ),
       ),
     );

@@ -339,27 +339,38 @@ class _HomeScreenState extends State<HomeScreen> {
               child: const Icon(
                 Icons.emoji_events,
                 color: Colors.white,
-                size: 32,
+                size: 28,
               ),
             ),
             const SizedBox(width: 12),
-            const Text('Achievement Unlocked!'),
+            const Flexible(
+              child: Text(
+                'Achievement Unlocked!',
+                style: TextStyle(fontSize: 18),
+              ),
+            ),
           ],
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: achievements.map((id) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Text(
-                id.replaceAll('_', ' ').toUpperCase(),
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            );
-          }).toList(),
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 200),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: achievements.map((id) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Text(
+                    id.replaceAll('_', ' ').toUpperCase(),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
         ),
         actions: [
           TextButton(
