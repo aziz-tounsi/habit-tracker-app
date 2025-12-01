@@ -32,13 +32,17 @@ class HabitModelAdapter extends TypeAdapter<HabitModel> {
       longestStreak: fields[12] as int,
       totalCompletions: fields[13] as int,
       completedDates: (fields[14] as List?)?.cast<String>(),
+      isQuitHabit: fields[15] == null ? false : fields[15] as bool,
+      quitStartDate: fields[16] as DateTime?,
+      moneySavedPerDay: fields[17] as double?,
+      relapses: (fields[18] as List?)?.cast<DateTime>(),
     );
   }
 
   @override
   void write(BinaryWriter writer, HabitModel obj) {
     writer
-      ..writeByte(15)
+      ..writeByte(19)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -68,7 +72,15 @@ class HabitModelAdapter extends TypeAdapter<HabitModel> {
       ..writeByte(13)
       ..write(obj.totalCompletions)
       ..writeByte(14)
-      ..write(obj.completedDates);
+      ..write(obj.completedDates)
+      ..writeByte(15)
+      ..write(obj.isQuitHabit)
+      ..writeByte(16)
+      ..write(obj.quitStartDate)
+      ..writeByte(17)
+      ..write(obj.moneySavedPerDay)
+      ..writeByte(18)
+      ..write(obj.relapses);
   }
 
   @override
