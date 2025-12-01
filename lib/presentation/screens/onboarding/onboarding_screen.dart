@@ -4,6 +4,7 @@ import 'package:animate_do/animate_do.dart';
 import 'package:confetti/confetti.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/suggestions.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../providers/habit_provider.dart';
 import '../../../providers/onboarding_provider.dart';
 import '../../widgets/common/gradient_button.dart';
@@ -88,7 +89,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     // Map emoji to a valid icon index
     // Use hashCode and ensure it's within valid range of available icons
     final iconCount = AppConstants.habitIcons.length;
-    return emoji.hashCode.abs() % iconCount;
+    return (emoji.hashCode.abs() % iconCount).toInt();
   }
 
   Future<void> _addHabitFromSelection({
