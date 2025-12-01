@@ -165,7 +165,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             
             // Get completion rate for this day
             final habits = provider.getHabitsForDate(date);
-            final dateKey = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+            final dateKey = Helpers.formatDateForStorage(date);
             final completedCount = habits.where((h) => h.completedDates.contains(dateKey)).length;
             final completionRate = habits.isEmpty ? 0.0 : completedCount / habits.length;
 
@@ -244,7 +244,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             )
           else
             ...habits.map((habit) {
-              final dateKey = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+              final dateKey = Helpers.formatDateForStorage(date);
               final isCompleted = habit.completedDates.contains(dateKey);
               return Padding(
                 padding: const EdgeInsets.only(bottom: 8),
