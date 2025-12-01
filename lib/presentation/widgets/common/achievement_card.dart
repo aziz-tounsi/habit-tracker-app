@@ -144,7 +144,6 @@ class AchievementCard extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
+      );
   }
 }
