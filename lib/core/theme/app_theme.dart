@@ -2,25 +2,32 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppColors {
-  // Primary colors (Opal-inspired)
-  static const Color primaryPurple = Color(0xFF8B7CF6); // Soft purple
-  static const Color secondaryPink = Color(0xFFE879A9); // Muted pink
-  static const Color accentCyan = Color(0xFF4FD1C5); // Soft teal
-  static const Color accentGreen = Color(0xFF00E676);
+  // Primary colors (Premium Dark)
+  static const Color primaryPurple = Color(0xFF7C3AED); // Vibrant purple
+  static const Color secondaryPink = Color(0xFFEC4899); // Pink
+  static const Color accentCyan = Color(0xFF06B6D4); // Cyan
+  static const Color accentGreen = Color(0xFF10B981); // Green
 
-  // Background colors (Opal-inspired)
-  static const Color darkBackground = Color(0xFF0D1321); // Deep navy
-  static const Color darkSurface = Color(0xFF1A1F35); // Semi-transparent dark
-  static const Color darkCard = Color(0xFF1A1F35);
+  // Background colors (Premium Dark)
+  static const Color darkBackground = Color(0xFF0A0A0F); // Almost black
+  static const Color darkSurface = Color(0xFF14141F); // Dark card
+  static const Color darkCard = Color(0xFF1E1E2E); // Elevated card
+  
+  // Light mode backgrounds
   static const Color lightBackground = Color(0xFFF5F7FA);
   static const Color lightSurface = Color(0xFFFFFFFF);
   static const Color lightCard = Color(0xFFF8F9FD);
 
   // Text colors
-  static const Color darkText = Color(0xFFF7FAFC); // Off-white
-  static const Color darkTextSecondary = Color(0xFFB0B0B0);
+  static const Color darkText = Color(0xFFF8FAFC); // White
+  static const Color darkTextSecondary = Color(0xFF94A3B8); // Gray
   static const Color lightText = Color(0xFF1A1A2E);
   static const Color lightTextSecondary = Color(0xFF6B7280);
+  
+  // Additional colors
+  static const Color success = Color(0xFF10B981); // Green
+  static const Color warning = Color(0xFFF59E0B); // Amber
+  static const Color error = Color(0xFFEF4444); // Red
 
   // Gradient colors
   static const LinearGradient primaryGradient = LinearGradient(
@@ -47,16 +54,18 @@ class AppColors {
     end: Alignment.bottomRight,
   );
 
-  // Habit category colors
+  // Habit category colors (10 color options)
   static const List<Color> habitColors = [
-    primaryPurple,
-    secondaryPink,
-    accentCyan,
-    accentGreen,
-    Color(0xFFFF9A8B),
-    Color(0xFFFFC857),
-    Color(0xFF7B68EE),
-    Color(0xFF20B2AA),
+    primaryPurple, // Purple
+    secondaryPink, // Pink
+    accentCyan, // Cyan
+    accentGreen, // Green
+    Color(0xFFFF9A8B), // Coral
+    Color(0xFFFFC857), // Yellow
+    Color(0xFF7B68EE), // Medium Purple
+    Color(0xFF20B2AA), // Light Sea Green
+    Color(0xFFFF6B6B), // Red
+    Color(0xFF4ECDC4), // Turquoise
   ];
 
   static const List<LinearGradient> habitGradients = [

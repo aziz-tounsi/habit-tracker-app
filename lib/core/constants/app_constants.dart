@@ -120,5 +120,68 @@ class AppConstants {
     'One day at a time.',
     'You are capable of amazing things.',
     'Make today count!',
+    'The secret of getting ahead is getting started.',
+    'Success is the sum of small efforts repeated day in and day out.',
+    'Your only limit is you.',
+    'Don\'t watch the clock; do what it does. Keep going.',
+    'The best time to plant a tree was 20 years ago. The second best time is now.',
   ];
+
+  // Habit Templates
+  static const Map<String, List<Map<String, dynamic>>> habitTemplates = {
+    'Morning Routine': [
+      {'name': 'Drink Water', 'icon': 2, 'category': 'Health', 'description': 'Start your day hydrated'},
+      {'name': 'Morning Exercise', 'icon': 0, 'category': 'Fitness', 'description': 'Get your body moving'},
+      {'name': 'Healthy Breakfast', 'icon': 4, 'category': 'Health', 'description': 'Fuel your body right'},
+      {'name': 'Meditate', 'icon': 5, 'category': 'Mindfulness', 'description': 'Clear your mind'},
+      {'name': 'Plan Your Day', 'icon': 10, 'category': 'Productivity', 'description': 'Set daily goals'},
+    ],
+    'Fitness Pack': [
+      {'name': 'Morning Run', 'icon': 6, 'category': 'Fitness', 'description': 'Cardio workout'},
+      {'name': 'Strength Training', 'icon': 0, 'category': 'Fitness', 'description': 'Build muscle'},
+      {'name': 'Stretching', 'icon': 16, 'category': 'Fitness', 'description': 'Improve flexibility'},
+      {'name': 'Track Calories', 'icon': 4, 'category': 'Health', 'description': 'Monitor nutrition'},
+    ],
+    'Mindfulness': [
+      {'name': 'Morning Meditation', 'icon': 5, 'category': 'Mindfulness', 'description': 'Start peacefully'},
+      {'name': 'Gratitude Journal', 'icon': 1, 'category': 'Mindfulness', 'description': 'Count your blessings'},
+      {'name': 'Evening Reflection', 'icon': 21, 'category': 'Mindfulness', 'description': 'End with awareness'},
+    ],
+    'Productivity': [
+      {'name': 'Deep Work Session', 'icon': 10, 'category': 'Productivity', 'description': 'Focus time'},
+      {'name': 'Check Emails', 'icon': 18, 'category': 'Productivity', 'description': 'Stay organized'},
+      {'name': 'Daily Planning', 'icon': 19, 'category': 'Productivity', 'description': 'Time management'},
+      {'name': 'Learn Something New', 'icon': 11, 'category': 'Learning', 'description': 'Continuous growth'},
+    ],
+    'Learning': [
+      {'name': 'Read 30 Minutes', 'icon': 1, 'category': 'Learning', 'description': 'Expand knowledge'},
+      {'name': 'Practice Coding', 'icon': 7, 'category': 'Learning', 'description': 'Improve skills'},
+      {'name': 'Watch Tutorial', 'icon': 13, 'category': 'Learning', 'description': 'Learn visually'},
+    ],
+  };
+
+  // Completion messages
+  static const List<String> completionMessages = [
+    '🎉 Amazing! Keep it up!',
+    '💪 You\'re crushing it!',
+    '⭐ Fantastic work!',
+    '🔥 On fire today!',
+    '✨ Excellent progress!',
+    '🌟 You\'re a star!',
+    '💎 Diamond performance!',
+    '🏆 Champion mindset!',
+    '🚀 To the moon!',
+    '👏 Well done!',
+  ];
+
+  // Streak milestone messages
+  static Map<int, String> streakMilestones = {
+    3: '🔥 3-day streak! Building momentum!',
+    7: '🔥 Week streak! You\'re on fire!',
+    14: '🔥 2-week streak! Unstoppable!',
+    21: '🔥 21 days! Habit formed!',
+    30: '🔥 Month streak! Legendary!',
+    50: '🔥 50 days! Incredible dedication!',
+    100: '🔥 Century! You\'re a master!',
+  };
 }
