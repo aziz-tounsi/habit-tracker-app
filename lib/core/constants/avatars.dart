@@ -262,7 +262,7 @@ class PremiumAvatars {
     AvatarOption.gradient(
       id: 'gradient_sunset_fire',
       colors: AvatarSystem.gradientPresets[2],
-      icon: Iconsax.flame,
+      icon: Iconsax.flash_1,
       name: 'Sunset Fire',
     ),
     AvatarOption.gradient(

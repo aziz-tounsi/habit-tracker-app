@@ -34,6 +34,9 @@ class UserModel extends HiveObject {
   @HiveField(9)
   List<String> unlockedAchievements;
 
+  @HiveField(10)
+  List<String> unlockedStones;
+
   UserModel({
     required this.id,
     required this.name,
@@ -45,8 +48,10 @@ class UserModel extends HiveObject {
     this.accentColorIndex = 0,
     this.notificationsEnabled = true,
     List<String>? unlockedAchievements,
+    List<String>? unlockedStones,
   })  : createdAt = createdAt ?? DateTime.now(),
-        unlockedAchievements = unlockedAchievements ?? [];
+        unlockedAchievements = unlockedAchievements ?? [],
+        unlockedStones = unlockedStones ?? [];
 
   int get level => totalXP ~/ 100;
 
@@ -68,6 +73,16 @@ class UserModel extends HiveObject {
     return unlockedAchievements.contains(achievementId);
   }
 
+  void unlockStone(String stoneId) {
+    if (!unlockedStones.contains(stoneId)) {
+      unlockedStones.add(stoneId);
+    }
+  }
+
+  bool hasStone(String stoneId) {
+    return unlockedStones.contains(stoneId);
+  }
+
   UserModel copyWith({
     String? id,
     String? name,
@@ -79,6 +94,7 @@ class UserModel extends HiveObject {
     int? accentColorIndex,
     bool? notificationsEnabled,
     List<String>? unlockedAchievements,
+    List<String>? unlockedStones,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -91,6 +107,7 @@ class UserModel extends HiveObject {
       accentColorIndex: accentColorIndex ?? this.accentColorIndex,
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
       unlockedAchievements: unlockedAchievements ?? List.from(this.unlockedAchievements),
+      unlockedStones: unlockedStones ?? List.from(this.unlockedStones),
     );
   }
 }

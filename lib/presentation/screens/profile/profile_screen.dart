@@ -8,7 +8,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/currencies.dart';
 import '../../../core/constants/avatars.dart';
 import '../../../core/constants/premium_icons.dart';
-import '../../../core/constants/stones.dart';
+import '../../../data/models/stone_model.dart';
 import '../../../providers/habit_provider.dart';
 import '../../widgets/common/glass_container.dart';
 import '../../widgets/common/galaxy_background.dart';
@@ -56,7 +56,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         builder: (context, habitProvider, child) {
           final user = habitProvider.user;
           final unlockedStones = user?.unlockedStones ?? [];
-          final allStones = StonesConstants.getAllStones();
+          final allStones = StoneModel.allStones;
 
           return SingleChildScrollView(
           padding: const EdgeInsets.symmetric(vertical: 20),

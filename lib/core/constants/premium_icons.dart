@@ -31,7 +31,7 @@ class PremiumIcons {
 
   // Challenge icons - replacing emoji representations
   static const Map<String, IconData> challengeIcons = {
-    'streak': Iconsax.flame, // 🔥 -> Fire/flame
+    'streak': Iconsax.flash_1, // 🔥 -> Fire/flame
     'strength': Iconsax.chart, // 💪 -> Strength/chart
     'learning': Iconsax.book_1, // 📚 -> Book
     'trophy': Iconsax.cup, // 🏆 -> Trophy/cup
@@ -41,13 +41,13 @@ class PremiumIcons {
 
   // Achievement icons - replacing emoji representations  
   static const Map<String, IconData> achievementIcons = {
-    'fire': Iconsax.flame, // 🔥 -> Fire/flame
+    'fire': Iconsax.flash_1, // 🔥 -> Fire/flame
     'star': Iconsax.star_1, // ⭐ -> Star
-    'diamond': Iconsax.medal_star, // 💎 -> Diamond/medal
+    'diamond': Iconsax.diamonds, // 💎 -> Diamond/medal
     'medal': Iconsax.award, // 🏅 -> Medal/award
     'crown': Iconsax.crown_1, // 👑 -> Crown
-    'rocket': Iconsax.rocket_1, // 🚀 -> Rocket
-    'target': Iconsax.target, // 🎯 -> Target
+    'rocket': Iconsax.send_2, // 🚀 -> Rocket
+    'target': Iconsax.arrow, // 🎯 -> Target
     'trophy': Iconsax.cup, // 🏆 -> Trophy
   };
 
@@ -55,10 +55,10 @@ class PremiumIcons {
   static const Map<String, IconData> uiIcons = {
     'sparkles': Iconsax.flash_1, // ✨ -> Sparkle/flash
     'star': Iconsax.star_1, // ⭐ -> Star
-    'fire': Iconsax.flame, // 🔥 -> Fire
+    'fire': Iconsax.flash_1, // 🔥 -> Fire
     'muscle': Iconsax.chart, // 💪 -> Strength
-    'target': Iconsax.target, // 🎯 -> Target
-    'starCircle': Iconsax.star_circle, // 🌟 -> Star in circle
+    'target': Iconsax.arrow, // 🎯 -> Target
+    'starCircle': Iconsax.star_1, // 🌟 -> Star in circle
     'magic': Iconsax.magic_star, // 💫 -> Magic/sparkle
     'rainbow': Iconsax.crown, // 🌈 -> Crown (premium)
     'palette': Iconsax.brush_1, // 🎨 -> Brush/palette
@@ -67,7 +67,7 @@ class PremiumIcons {
     'bulb': Iconsax.lamp_1, // 💡 -> Light bulb
     'plant': Iconsax.tree, // 🌿 -> Tree/plant
     'butterfly': Iconsax.magicpen, // 🦋 -> Magic/transformation
-    'rocket': Iconsax.rocket_1, // 🚀 -> Rocket
+    'rocket': Iconsax.send_2, // 🚀 -> Rocket
     'heart': Iconsax.heart, // ❤️ -> Heart
     'trophy': Iconsax.cup, // 🏆 -> Trophy
     'medal': Iconsax.award, // 🏅 -> Medal
@@ -78,12 +78,12 @@ class PremiumIcons {
     Iconsax.cup, // Party/celebration
     Iconsax.chart, // Strength
     Iconsax.star_1, // Star
-    Iconsax.flame, // Fire
+    Iconsax.flash_1, // Fire
     Iconsax.flash_1, // Sparkle
     Iconsax.crown_1, // Crown/star
-    Iconsax.medal_star, // Diamond
+    Iconsax.diamonds, // Diamond
     Iconsax.award, // Trophy
-    Iconsax.rocket_1, // Rocket
+    Iconsax.send_2, // Rocket
     Iconsax.heart, // Applause/heart
   ];
 
