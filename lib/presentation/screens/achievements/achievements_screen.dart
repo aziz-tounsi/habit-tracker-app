@@ -183,13 +183,17 @@ class AchievementsScreen extends StatelessWidget {
               showGlow: isUnlocked,
             ),
             const SizedBox(height: 12),
-            Text(
-              stone.name,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: isUnlocked ? Colors.white : Colors.white.withOpacity(0.4),
+            Flexible(
+              child: Text(
+                stone.name,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: isUnlocked ? Colors.white : Colors.white.withOpacity(0.4),
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
             ),
             const SizedBox(height: 4),
