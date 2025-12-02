@@ -172,7 +172,7 @@ class AchievementsScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         useBackdropFilter: true,
         showGlow: isUnlocked,
-        glowColor: isUnlocked ? Color(stone.themeColorValues.first) : null,
+        glowColor: isUnlocked ? stone.glowColor : null,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

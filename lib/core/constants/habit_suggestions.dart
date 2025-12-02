@@ -644,15 +644,15 @@ class HabitSuggestions {
     ),
   ];
 
-  static const List<Map<String, dynamic>> userGoals = [
-    {'name': 'Be Healthier', 'icon': 'health'},
-    {'name': 'Build Better Habits', 'icon': 'star'},
-    {'name': 'Quit Bad Habits', 'icon': 'forbidden'},
-    {'name': 'Be More Productive', 'icon': 'trending'},
-    {'name': 'Improve Mental Health', 'icon': 'lovely'},
-    {'name': 'Save Money', 'icon': 'wallet'},
-    {'name': 'Get Fit', 'icon': 'weight'},
-    {'name': 'Learn New Skills', 'icon': 'book'},
+  static const List<String> userGoals = [
+    'Be Healthier',
+    'Build Better Habits',
+    'Quit Bad Habits',
+    'Be More Productive',
+    'Improve Mental Health',
+    'Save Money',
+    'Get Fit',
+    'Learn New Skills',
   ];
 
   /// Suggest top 3 categories based on habit name

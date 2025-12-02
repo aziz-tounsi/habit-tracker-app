@@ -11,6 +11,7 @@ class StoneModel {
   final String id;
   final String name;
   final String description;
+  final String unlockCondition;
   final StoneRarity rarity;
   final Color primaryColor;
   final Color secondaryColor;
@@ -21,6 +22,7 @@ class StoneModel {
     required this.id,
     required this.name,
     required this.description,
+    required this.unlockCondition,
     required this.rarity,
     required this.primaryColor,
     required this.secondaryColor,
@@ -33,6 +35,7 @@ class StoneModel {
       id: 'amethyst',
       name: 'Amethyst',
       description: 'The stone of peace and calm',
+      unlockCondition: 'Complete your first habit',
       rarity: StoneRarity.common,
       primaryColor: Color(0xFF9B59B6),
       secondaryColor: Color(0xFF8E44AD),
@@ -43,6 +46,7 @@ class StoneModel {
       id: 'ruby',
       name: 'Ruby',
       description: 'The stone of passion and energy',
+      unlockCondition: 'Complete 7 consecutive days',
       rarity: StoneRarity.rare,
       primaryColor: Color(0xFFE74C3C),
       secondaryColor: Color(0xFFC0392B),
@@ -53,6 +57,7 @@ class StoneModel {
       id: 'sapphire',
       name: 'Sapphire',
       description: 'The stone of focus and wisdom',
+      unlockCondition: 'Reach level 5',
       rarity: StoneRarity.rare,
       primaryColor: Color(0xFF3498DB),
       secondaryColor: Color(0xFF2980B9),
@@ -63,6 +68,7 @@ class StoneModel {
       id: 'emerald',
       name: 'Emerald',
       description: 'The stone of growth and renewal',
+      unlockCondition: 'Complete 30 consecutive days',
       rarity: StoneRarity.epic,
       primaryColor: Color(0xFF2ECC71),
       secondaryColor: Color(0xFF27AE60),
@@ -73,6 +79,7 @@ class StoneModel {
       id: 'diamond',
       name: 'Diamond',
       description: 'The ultimate stone of perfection',
+      unlockCondition: 'Complete 100 consecutive days',
       rarity: StoneRarity.legendary,
       primaryColor: Color(0xFFECF0F1),
       secondaryColor: Color(0xFFBDC3C7),
@@ -83,6 +90,7 @@ class StoneModel {
       id: 'opal',
       name: 'Opal',
       description: 'The mystical shifting stone',
+      unlockCondition: 'Reach level 10',
       rarity: StoneRarity.legendary,
       primaryColor: Color(0xFFE8DAEF),
       secondaryColor: Color(0xFFD2B4DE),
@@ -93,6 +101,7 @@ class StoneModel {
       id: 'citrine',
       name: 'Citrine',
       description: 'The stone of bright energy',
+      unlockCondition: 'Complete 50 habits total',
       rarity: StoneRarity.epic,
       primaryColor: Color(0xFFF39C12),
       secondaryColor: Color(0xFFE67E22),
@@ -103,6 +112,7 @@ class StoneModel {
       id: 'rose_quartz',
       name: 'Rose Quartz',
       description: 'The stone of love and compassion',
+      unlockCondition: 'Complete 3 habits in one day',
       rarity: StoneRarity.common,
       primaryColor: Color(0xFFF5B7B1),
       secondaryColor: Color(0xFFF1948A),

@@ -9,7 +9,7 @@ class PremiumIcons {
     'starter_crystal': Iconsax.flash_1, // ✨ -> Flash/sparkle
     'amethyst': Iconsax.gemini, // 💜 -> Gemini/gem
     'ruby': Iconsax.heart, // ❤️ -> Heart
-    'emerald': Iconsax.leaf, // 💚 -> Leaf/nature
+    'emerald': Iconsax.tree, // 💚 -> Tree/nature
     'sapphire': Iconsax.drop, // 🔵 -> Water drop/blue
     'topaz': Iconsax.sun_1, // 🧡 -> Sun/warm
     'diamond': Iconsax.medal_star, // 💎 -> Medal/diamond
