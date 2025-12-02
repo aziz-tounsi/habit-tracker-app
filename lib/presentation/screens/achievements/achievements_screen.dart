@@ -9,12 +9,43 @@ import '../../../core/constants/premium_icons.dart';
 import '../../../data/models/achievement_model.dart';
 import '../../../data/models/stone_model.dart';
 import '../../../providers/habit_provider.dart';
-import '../../widgets/common/glass_container.dart';
+import '../../widgets/common/smart_blur_container.dart';
 import '../../widgets/common/galaxy_background.dart';
 import '../../widgets/common/crystal_stone.dart';
 
-class AchievementsScreen extends StatelessWidget {
+class AchievementsScreen extends StatefulWidget {
   const AchievementsScreen({super.key});
+
+  @override
+  State<AchievementsScreen> createState() => _AchievementsScreenState();
+}
+
+class _AchievementsScreenState extends State<AchievementsScreen> {
+  final ScrollController _scrollController = ScrollController();
+  double _scrollProgress = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.hasClients) {
+      final maxScroll = _scrollController.position.maxScrollExtent;
+      final currentScroll = _scrollController.offset;
+      setState(() {
+        _scrollProgress = maxScroll > 0 ? (currentScroll / maxScroll).clamp(0.0, 1.0) : 0.0;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,6 +59,7 @@ class AchievementsScreen extends StatelessWidget {
           final totalCount = allStones.length;
 
           return SingleChildScrollView(
+          controller: _scrollController,
           padding: const EdgeInsets.symmetric(vertical: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -67,9 +99,11 @@ class AchievementsScreen extends StatelessWidget {
                 delay: const Duration(milliseconds: 100),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: GlassContainer(
+                  child: SmartBlurContainer(
                     padding: const EdgeInsets.all(20),
-                    useBackdropFilter: true,
+                    enableBackdropFilter: true,
+                    enableShaderGloss: true,
+                    motionFactor: _scrollProgress,
                     child: Column(
                       children: [
                         Row(
@@ -168,11 +202,13 @@ class AchievementsScreen extends StatelessWidget {
   ) {
     return GestureDetector(
       onTap: () => _showStoneDetails(context, stone, isUnlocked),
-      child: GlassContainer(
+      child: SmartBlurContainer(
         padding: const EdgeInsets.all(16),
-        useBackdropFilter: true,
+        enableBackdropFilter: true,
+        enableShaderGloss: true,
         showGlow: isUnlocked,
         glowColor: isUnlocked ? stone.glowColor : null,
+        motionFactor: _scrollProgress,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
