@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 
 class GlassContainer extends StatelessWidget {
   final Widget child;
@@ -11,9 +12,9 @@ class GlassContainer extends StatelessWidget {
   final double blur;
   final double opacity;
   final VoidCallback? onTap;
-
-  // Opal-inspired glassmorphism opacity factor (0.8 = 80% of base opacity for softer effect)
-  static const double _opalOpacityFactor = 0.8;
+  final bool useBackdropFilter;
+  final bool showGlow;
+  final Color? glowColor;
 
   const GlassContainer({
     super.key,
@@ -27,11 +28,21 @@ class GlassContainer extends StatelessWidget {
     this.blur = 10,
     this.opacity = 0.1,
     this.onTap,
+    this.useBackdropFilter = true,
+    this.showGlow = false,
+    this.glowColor,
   });
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    final containerChild = Container(
+      width: width,
+      height: height,
+      padding: padding,
+      child: child,
+    );
     
     return GestureDetector(
       onTap: onTap,
@@ -41,29 +52,50 @@ class GlassContainer extends StatelessWidget {
         margin: margin,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(borderRadius),
-          color: isDark 
-              ? Colors.white.withAlpha((opacity * 255 * _opalOpacityFactor).round())
-              : Colors.black.withAlpha((opacity * 0.5 * 255).round()),
           border: Border.all(
             color: borderColor ?? 
-                (isDark ? Colors.white.withAlpha(20) : Colors.black.withAlpha(13)),
+                (isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05)),
             width: 1.0,
           ),
           boxShadow: [
+            // Subtle shadow for depth
             BoxShadow(
-              color: Colors.black.withAlpha(isDark ? 20 : 13),
+              color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
               blurRadius: blur,
               spreadRadius: 0,
-              offset: const Offset(0, 2),
+              offset: const Offset(0, 4),
             ),
+            // Optional glow effect
+            if (showGlow && glowColor != null)
+              BoxShadow(
+                color: glowColor!.withOpacity(0.3),
+                blurRadius: 20,
+                spreadRadius: 2,
+              ),
           ],
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(borderRadius),
-          child: Container(
-            padding: padding,
-            child: child,
-          ),
+          child: useBackdropFilter
+              ? BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isDark 
+                          ? Colors.white.withOpacity(opacity * 0.8)
+                          : Colors.black.withOpacity(opacity * 0.5),
+                    ),
+                    child: containerChild,
+                  ),
+                )
+              : Container(
+                  decoration: BoxDecoration(
+                    color: isDark 
+                        ? Colors.white.withOpacity(opacity * 0.8)
+                        : Colors.black.withOpacity(opacity * 0.5),
+                  ),
+                  child: containerChild,
+                ),
         ),
       ),
     );

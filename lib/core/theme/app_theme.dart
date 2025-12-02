@@ -2,24 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppColors {
-  // Primary colors (Premium Dark)
+  // Premium Opal Colors
+  static const Color goldAccent = Color(0xFFE5B45A); // Premium gold
   static const Color primaryPurple = Color(0xFF7C3AED); // Vibrant purple
   static const Color secondaryPink = Color(0xFFEC4899); // Pink
   static const Color accentCyan = Color(0xFF06B6D4); // Cyan
   static const Color accentGreen = Color(0xFF10B981); // Green
 
-  // Background colors (Premium Dark)
-  static const Color darkBackground = Color(0xFF0A0A0F); // Almost black
-  static const Color darkSurface = Color(0xFF14141F); // Dark card
-  static const Color darkCard = Color(0xFF1E1E2E); // Elevated card
+  // Premium Dark Backgrounds (Opal-style)
+  static const Color darkBackground = Color(0xFF000000); // Pure black
+  static const Color darkBackgroundSecondary = Color(0xFF0D0D0D); // Almost black
+  static const Color darkBackgroundTertiary = Color(0xFF1A1A1A); // Dark gray
+  static const Color darkSurface = Color(0xFF1C1C1E); // Dark card
+  static const Color darkCard = Color(0xFF2C2C2E); // Elevated card
   
   // Light mode backgrounds
   static const Color lightBackground = Color(0xFFF5F7FA);
   static const Color lightSurface = Color(0xFFFFFFFF);
   static const Color lightCard = Color(0xFFF8F9FD);
 
-  // Text colors
-  static const Color darkText = Color(0xFFF8FAFC); // White
+  // Text colors (Premium white with opacity)
+  static const Color darkText = Color(0xFFFFFFFF); // Pure white
   static const Color darkTextSecondary = Color(0xFF94A3B8); // Gray
   static const Color lightText = Color(0xFF1A1A2E);
   static const Color lightTextSecondary = Color(0xFF6B7280);
@@ -52,6 +55,20 @@ class AppColors {
     colors: [secondaryPink, Color(0xFFFF9A8B)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
+  );
+
+  // Premium Gold Gradient for avatar frames and special elements
+  static const LinearGradient goldGradient = LinearGradient(
+    colors: [Color(0xFFFFD700), goldAccent, Color(0xFFB8860B)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  // Clean Dark Gradient Background (replacing galaxy)
+  static const LinearGradient darkBackgroundGradient = LinearGradient(
+    colors: [darkBackgroundSecondary, darkBackgroundTertiary],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
   );
 
   static const LinearGradient errorGradient = LinearGradient(

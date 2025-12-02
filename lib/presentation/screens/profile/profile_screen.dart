@@ -8,9 +8,12 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/currencies.dart';
 import '../../../core/constants/avatars.dart';
 import '../../../core/constants/premium_icons.dart';
+import '../../../core/constants/stones.dart';
 import '../../../providers/habit_provider.dart';
 import '../../widgets/common/glass_container.dart';
 import '../../widgets/common/galaxy_background.dart';
+import '../../widgets/common/crystal_stone.dart';
+import '../../widgets/common/premium_stats_chart.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -24,6 +27,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _userAvatar = 'gradient_purple_star';
   DateTime? _joinDate;
   Currency _selectedCurrency = Currencies.defaultCurrency;
+  String _selectedPeriod = 'Week';
 
   @override
   void initState() {
@@ -51,6 +55,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Consumer<HabitProvider>(
         builder: (context, habitProvider, child) {
           final user = habitProvider.user;
+          final unlockedStones = user?.unlockedStones ?? [];
+          final allStones = StonesConstants.getAllStones();
 
           return SingleChildScrollView(
           padding: const EdgeInsets.symmetric(vertical: 20),
@@ -66,12 +72,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     'Profile',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
                   ),
                 ),
               ),
               const SizedBox(height: 24),
-              // Profile Header
+              
+              // Premium Profile Header with Golden Frame
               FadeInUp(
                 duration: const Duration(milliseconds: 500),
                 delay: const Duration(milliseconds: 100),
@@ -79,50 +87,75 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: GlassContainer(
                     padding: const EdgeInsets.all(24),
+                    useBackdropFilter: true,
                     child: Column(
                       children: [
-                        // Avatar
-                        GradientAvatarBuilder(
-                          seed: _userAvatar,
-                          size: 100,
-                          gradientColors: PremiumAvatars.getById(_userAvatar)?.gradientColors,
-                          icon: PremiumAvatars.getById(_userAvatar)?.icon,
+                        // Avatar with golden glowing frame
+                        Container(
+                          width: 120,
+                          height: 120,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: AppColors.goldGradient,
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.goldAccent.withOpacity(0.5),
+                                blurRadius: 30,
+                                spreadRadius: 5,
+                              ),
+                            ],
+                          ),
+                          padding: const EdgeInsets.all(4),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColors.darkCard,
+                            ),
+                            padding: const EdgeInsets.all(8),
+                            child: GradientAvatarBuilder(
+                              seed: _userAvatar,
+                              size: 80,
+                              gradientColors: PremiumAvatars.getById(_userAvatar)?.gradientColors,
+                              icon: PremiumAvatars.getById(_userAvatar)?.icon,
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 16),
-                        // Name
+                        
+                        // Username
                         Text(
                           _userName,
                           style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
+                            color: Colors.white,
                           ),
                         ),
                         const SizedBox(height: 8),
-                        // Email (placeholder for guest mode)
-                        Text(
-                          'Guest User',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Theme.of(context).colorScheme.onSurface.withAlpha(153),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        // Level Badge
+                        
+                        // Badge (Top 10%)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           decoration: BoxDecoration(
-                            gradient: AppColors.cyanPurpleGradient,
+                            gradient: AppColors.goldGradient,
                             borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.goldAccent.withOpacity(0.3),
+                                blurRadius: 10,
+                                spreadRadius: 1,
+                              ),
+                            ],
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.star, color: Colors.white, size: 20),
-                              const SizedBox(width: 8),
+                              const Icon(Icons.stars, color: Colors.white, size: 16),
+                              const SizedBox(width: 6),
                               Text(
-                                'Level ${habitProvider.level}',
+                                'Top 10%',
                                 style: const TextStyle(
-                                  fontSize: 16,
+                                  fontSize: 14,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
                                 ),
@@ -130,29 +163,140 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ],
                           ),
                         ),
+                        const SizedBox(height: 20),
+                        
+                        // Row of collected 3D crystal stones
+                        if (allStones.isNotEmpty)
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Collected Stones',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white.withOpacity(0.7),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Row(
+                                  children: allStones.take(8).map((stone) {
+                                    final isUnlocked = unlockedStones.contains(stone.id);
+                                    return Padding(
+                                      padding: const EdgeInsets.only(right: 12),
+                                      child: SmallCrystalStone(
+                                        stoneType: stone.id,
+                                        isLocked: !isUnlocked,
+                                      ),
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
+                            ],
+                          ),
                       ],
                     ),
                   ),
                 ),
               ),
               const SizedBox(height: 24),
-              // Stats Grid
+              
+              // Stats Cards
               FadeInUp(
                 duration: const Duration(milliseconds: 500),
                 delay: const Duration(milliseconds: 200),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _buildPremiumStatCard(
+                          context,
+                          'Streak',
+                          '${habitProvider.currentMaxStreak}',
+                          'days',
+                          Icons.local_fire_department,
+                          AppColors.pinkOrangeGradient,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildPremiumStatCard(
+                          context,
+                          'Completions',
+                          '${habitProvider.totalCompletions}',
+                          'total',
+                          Icons.check_circle,
+                          AppColors.greenCyanGradient,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              
+              // Period Selector
+              FadeInUp(
+                duration: const Duration(milliseconds: 500),
+                delay: const Duration(milliseconds: 300),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: PeriodSelector(
+                    selectedPeriod: _selectedPeriod,
+                    onPeriodChanged: (period) {
+                      setState(() {
+                        _selectedPeriod = period;
+                      });
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              // Gradient Area Chart
+              FadeInUp(
+                duration: const Duration(milliseconds: 500),
+                delay: const Duration(milliseconds: 400),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: GlassContainer(
+                    padding: const EdgeInsets.all(16),
+                    useBackdropFilter: true,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Activity Overview',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        PremiumStatsChart(
+                          weekData: _getWeekData(habitProvider),
+                          selectedPeriod: _selectedPeriod,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              
+              // Additional Stats Grid
+              FadeInUp(
+                duration: const Duration(milliseconds: 500),
+                delay: const Duration(milliseconds: 500),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Statistics',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
                       Row(
                         children: [
                           Expanded(
@@ -182,33 +326,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Expanded(
                             child: _buildStatCard(
                               context,
-                              'Current Streak',
-                              '${habitProvider.currentMaxStreak} days',
-                              Icons.local_fire_department,
-                              AppColors.pinkOrangeGradient,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _buildStatCard(
-                              context,
                               'Best Streak',
                               '${habitProvider.longestStreak} days',
                               Icons.emoji_events,
-                              AppColors.greenCyanGradient,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildStatCard(
-                              context,
-                              'Completions',
-                              '${habitProvider.totalCompletions}',
-                              Icons.check_circle,
                               AppColors.greenCyanGradient,
                             ),
                           ),
@@ -228,128 +348,80 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
-              // Join Date Section
-              FadeInUp(
-                duration: const Duration(milliseconds: 500),
-                delay: const Duration(milliseconds: 300),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: GlassContainer(
-                    padding: const EdgeInsets.all(20),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.onSurface.withAlpha(13),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(Icons.calendar_today, size: 24),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Member Since',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                _joinDate != null
-                                    ? _formatDate(_joinDate!)
-                                    : (user?.createdAt != null
-                                        ? _formatDate(user!.createdAt)
-                                        : 'Just now'),
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).colorScheme.onSurface,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              // Currency Selector
-              FadeInUp(
-                duration: const Duration(milliseconds: 500),
-                delay: const Duration(milliseconds: 400),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Currency',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      GlassContainer(
-                        padding: const EdgeInsets.all(20),
-                        onTap: () => _showCurrencyPicker(),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 48,
-                              height: 48,
-                              decoration: BoxDecoration(
-                                gradient: AppColors.greenCyanGradient,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Icon(Icons.monetization_on, color: Colors.white, size: 24),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Selected Currency',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    '${_selectedCurrency.symbol} ${_selectedCurrency.name}',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Theme.of(context).colorScheme.onSurface,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const Icon(Icons.arrow_forward_ios, size: 16),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
             ],
           ),
         );
       },
     ),
+    );
+  }
+
+  Widget _buildPremiumStatCard(
+    BuildContext context,
+    String label,
+    String value,
+    String unit,
+    IconData icon,
+    LinearGradient gradient,
+  ) {
+    return GlassContainer(
+      padding: const EdgeInsets.all(20),
+      useBackdropFilter: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              gradient: gradient,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: gradient.colors.first.withOpacity(0.3),
+                  blurRadius: 10,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+            child: Icon(icon, color: Colors.white, size: 24),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: Colors.white.withOpacity(0.6),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  unit,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white.withOpacity(0.5),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -362,6 +434,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   ) {
     return GlassContainer(
       padding: const EdgeInsets.all(16),
+      useBackdropFilter: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -373,7 +446,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
-                  color: gradient.colors.first.withAlpha(76),
+                  color: gradient.colors.first.withOpacity(0.3),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),
@@ -386,7 +459,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             label,
             style: TextStyle(
               fontSize: 11,
-              color: Theme.of(context).colorScheme.onSurface.withAlpha(153),
+              color: Colors.white.withOpacity(0.6),
             ),
           ),
           const SizedBox(height: 4),
@@ -395,11 +468,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
           ),
         ],
       ),
     );
+  }
+
+  List<double> _getWeekData(HabitProvider provider) {
+    // Generate sample data based on actual stats
+    // In a real implementation, this would fetch actual weekly completion data
+    final baseValue = provider.totalCompletions > 0 
+        ? (provider.totalCompletions / 30).clamp(0, 10).toDouble()
+        : 2.0;
+    
+    return [
+      baseValue * 0.8,
+      baseValue * 1.2,
+      baseValue * 0.9,
+      baseValue * 1.5,
+      baseValue * 1.1,
+      baseValue * 1.3,
+      baseValue * 0.7,
+    ];
   }
 
   String _formatDate(DateTime date) {
@@ -429,7 +521,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   height: 40,
                   decoration: BoxDecoration(
                     gradient: isSelected ? AppColors.greenCyanGradient : null,
-                    color: isSelected ? null : Theme.of(context).colorScheme.onSurface.withAlpha(13),
+                    color: isSelected ? null : Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Center(

@@ -149,7 +149,7 @@ class ProfileHeader extends StatelessWidget {
                 ),
                 _buildStatItem(
                   context,
-                  icon: Icons.emoji_events,
+                  icon: Icons.stars,
                   label: 'Achievements',
                   value: '$unlockedAchievements',
                   gradient: AppColors.cyanPurpleGradient,
