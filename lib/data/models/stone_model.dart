@@ -112,10 +112,9 @@ class StoneModel {
   ];
 
   static StoneModel? getById(String id) {
-    try {
-      return allStones.firstWhere((s) => s.id == id);
-    } catch (e) {
-      return null;
-    }
+    return allStones.cast<StoneModel?>().firstWhere(
+      (s) => s?.id == id,
+      orElse: () => null,
+    );
   }
 }
