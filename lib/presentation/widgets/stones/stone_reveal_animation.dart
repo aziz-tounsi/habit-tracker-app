@@ -60,25 +60,30 @@ class _StoneRevealAnimationState extends State<StoneRevealAnimation>
     _startAnimation();
   }
 
-  void _startAnimation() async {
+  void _startAnimation() {
     // Stage 1: Rough rock (0-1000ms)
     setState(() => _currentStage = 1);
-    await Future.delayed(const Duration(milliseconds: 1000));
-
-    // Stage 2: Rock shatters (1000-2000ms)
-    setState(() => _currentStage = 2);
-    await Future.delayed(const Duration(milliseconds: 1000));
-
-    // Stage 3: Crystal revealed (2000-2500ms)
-    setState(() => _currentStage = 3);
-    _sparkleController.repeat(reverse: true);
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    // Stage 4: Crystal floats (2500ms+)
-    setState(() => _currentStage = 4);
-    _floatController.repeat(reverse: true);
-
-    widget.onComplete?.call();
+    Future.delayed(const Duration(milliseconds: 1000), () {
+      if (!mounted) return;
+      
+      // Stage 2: Rock shatters (1000-2000ms)
+      setState(() => _currentStage = 2);
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        if (!mounted) return;
+        
+        // Stage 3: Crystal revealed (2000-2500ms)
+        setState(() => _currentStage = 3);
+        _sparkleController.repeat(reverse: true);
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (!mounted) return;
+          
+          // Stage 4: Crystal floats (2500ms+)
+          setState(() => _currentStage = 4);
+          _floatController.repeat(reverse: true);
+          widget.onComplete?.call();
+        });
+      });
+    });
   }
 
   @override

@@ -5,8 +5,9 @@ import 'dart:math' as math;
 /// Premium avatar system replacing emoji avatars
 /// Uses DiceBear API for unique avatars and gradient geometric patterns
 class AvatarSystem {
-  // DiceBear API integration
-  static const String diceBearBaseUrl = 'https://api.dicebear.com/7.x';
+  // DiceBear API configuration
+  static const String diceBearApiVersion = '7.x';
+  static const String diceBearBaseUrl = 'https://api.dicebear.com/$diceBearApiVersion';
   
   // Available DiceBear styles (premium, non-emoji)
   static const List<String> diceBearStyles = [
@@ -324,11 +325,10 @@ class PremiumAvatars {
 
   /// Get avatar option by ID
   static AvatarOption? getById(String id) {
-    try {
-      return options.firstWhere((opt) => opt.id == id);
-    } catch (e) {
-      return null;
-    }
+    return options.cast<AvatarOption?>().firstWhere(
+      (opt) => opt?.id == id,
+      orElse: () => null,
+    );
   }
 
   /// Generate random avatar from seed

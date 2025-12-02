@@ -225,7 +225,7 @@ class StoneThemes {
     'diamond': diamond,
     'opal': opal,
     'citrine': citrine,
-    'topaz': topaz,
+    'topaz': citrine, // Alias for citrine
     'rose_quartz': roseQuartz,
     'obsidian': obsidian,
   };
@@ -235,9 +235,20 @@ class StoneThemes {
     return allThemes[stoneId] ?? starterCrystal;
   }
 
-  /// Get all available themes as a list
+  /// Get all unique themes as a list (excluding aliases)
   static List<StoneTheme> getAllThemes() {
-    return allThemes.values.toSet().toList(); // Using toSet to remove duplicates
+    return [
+      starterCrystal,
+      amethyst,
+      ruby,
+      sapphire,
+      emerald,
+      diamond,
+      opal,
+      citrine,
+      roseQuartz,
+      obsidian,
+    ];
   }
 }
 
