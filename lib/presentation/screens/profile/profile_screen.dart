@@ -3,8 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:iconsax/iconsax.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/currencies.dart';
+import '../../../core/constants/avatars.dart';
+import '../../../core/constants/premium_icons.dart';
 import '../../../providers/habit_provider.dart';
 import '../../widgets/common/glass_container.dart';
 import '../../widgets/common/galaxy_background.dart';
@@ -18,7 +21,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   String _userName = 'User';
-  String _userAvatar = '😊';
+  String _userAvatar = 'gradient_purple_star';
   DateTime? _joinDate;
   Currency _selectedCurrency = Currencies.defaultCurrency;
 
@@ -32,7 +35,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _userName = prefs.getString('user_name') ?? 'User';
-      _userAvatar = prefs.getString('user_avatar') ?? '😊';
+      _userAvatar = prefs.getString('user_avatar') ?? 'gradient_purple_star';
       final joinDateStr = prefs.getString('join_date');
       if (joinDateStr != null) {
         _joinDate = DateTime.parse(joinDateStr);
@@ -79,26 +82,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: Column(
                       children: [
                         // Avatar
-                        Container(
-                          width: 100,
-                          height: 100,
-                          decoration: BoxDecoration(
-                            gradient: AppColors.primaryGradient,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.primaryPurple.withAlpha(102),
-                                blurRadius: 24,
-                                offset: const Offset(0, 12),
-                              ),
-                            ],
-                          ),
-                          child: Center(
-                            child: Text(
-                              _userAvatar,
-                              style: const TextStyle(fontSize: 48),
-                            ),
-                          ),
+                        GradientAvatarBuilder(
+                          seed: _userAvatar,
+                          size: 100,
+                          gradientColors: PremiumAvatars.getById(_userAvatar)?.gradientColors,
+                          icon: PremiumAvatars.getById(_userAvatar)?.icon,
                         ),
                         const SizedBox(height: 16),
                         // Name

@@ -1,12 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:iconsax/iconsax.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/constants/premium_icons.dart';
 import '../../../data/models/challenge_model.dart';
 import '../../widgets/common/glass_container.dart';
 
 class ChallengesScreen extends StatelessWidget {
   const ChallengesScreen({super.key});
+
+  // Helper to map emoji to icon
+  IconData _getChallengeIcon(String emoji) {
+    switch (emoji) {
+      case '🔥':
+        return Iconsax.flame;
+      case '💪':
+        return Iconsax.chart;
+      case '📚':
+        return Iconsax.book_1;
+      case '🏆':
+        return Iconsax.cup;
+      case '⭐':
+        return Iconsax.star_1;
+      case '🌅':
+        return Iconsax.sun_1;
+      default:
+        return Iconsax.flash_1;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -96,9 +118,10 @@ class ChallengesScreen extends StatelessWidget {
                       ],
                     ),
                     child: Center(
-                      child: Text(
-                        challenge.iconEmoji,
-                        style: const TextStyle(fontSize: 24),
+                      child: Icon(
+                        _getChallengeIcon(challenge.iconEmoji),
+                        size: 24,
+                        color: Colors.white,
                       ),
                     ),
                   ),
@@ -234,9 +257,10 @@ class ChallengesScreen extends StatelessWidget {
                   ],
                 ),
                 child: Center(
-                  child: Text(
-                    challenge.iconEmoji,
-                    style: const TextStyle(fontSize: 40),
+                  child: Icon(
+                    _getChallengeIcon(challenge.iconEmoji),
+                    size: 40,
+                    color: Colors.white,
                   ),
                 ),
               ),

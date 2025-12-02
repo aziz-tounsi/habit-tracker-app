@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:iconsax/iconsax.dart';
 import '../../../data/models/achievement_model.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/constants/premium_icons.dart';
 import 'glass_container.dart';
 
 class AchievementCard extends StatelessWidget {
@@ -15,6 +17,30 @@ class AchievementCard extends StatelessWidget {
     required this.isUnlocked,
     this.onTap,
   });
+
+  // Helper to map achievement emoji to icon
+  IconData _getAchievementIcon(String emoji) {
+    switch (emoji) {
+      case '🔥':
+        return Iconsax.flame;
+      case '⭐':
+        return Iconsax.star_1;
+      case '💎':
+        return Iconsax.medal_star;
+      case '🏅':
+        return Iconsax.award;
+      case '👑':
+        return Iconsax.crown_1;
+      case '🚀':
+        return Iconsax.rocket_1;
+      case '🎯':
+        return Iconsax.target;
+      case '🏆':
+        return Iconsax.cup;
+      default:
+        return Iconsax.award;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,22 +88,18 @@ class AchievementCard extends StatelessWidget {
                 ),
                 child: Center(
                   child: isUnlocked
-                      ? Text(
-                          achievement.iconEmoji,
-                          style: const TextStyle(fontSize: 24),
+                      ? Icon(
+                          _getAchievementIcon(achievement.iconEmoji),
+                          size: 24,
+                          color: Colors.white,
                         )
                       : Stack(
                           alignment: Alignment.center,
                           children: [
-                            ColorFiltered(
-                              colorFilter: const ColorFilter.mode(
-                                Colors.grey,
-                                BlendMode.saturation,
-                              ),
-                              child: Text(
-                                achievement.iconEmoji,
-                                style: const TextStyle(fontSize: 24),
-                              ),
+                            Icon(
+                              _getAchievementIcon(achievement.iconEmoji),
+                              size: 24,
+                              color: Colors.grey,
                             ),
                             Icon(
                               Icons.lock,

@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:iconsax/iconsax.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/constants/premium_icons.dart';
 import '../../../data/models/achievement_model.dart';
 import '../../../providers/habit_provider.dart';
 import '../../widgets/common/glass_container.dart';
@@ -12,6 +14,30 @@ import '../../widgets/common/achievement_card.dart';
 
 class AchievementsScreen extends StatelessWidget {
   const AchievementsScreen({super.key});
+
+  // Helper to map achievement emoji to icon
+  IconData _getAchievementIcon(String emoji) {
+    switch (emoji) {
+      case '🔥':
+        return Iconsax.flame;
+      case '⭐':
+        return Iconsax.star_1;
+      case '💎':
+        return Iconsax.medal_star;
+      case '🏅':
+        return Iconsax.award;
+      case '👑':
+        return Iconsax.crown_1;
+      case '🚀':
+        return Iconsax.rocket_1;
+      case '🎯':
+        return Iconsax.target;
+      case '🏆':
+        return Iconsax.cup;
+      default:
+        return Iconsax.award;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -350,22 +376,18 @@ class AchievementsScreen extends StatelessWidget {
                   ),
                   child: Center(
                     child: isUnlocked
-                        ? Text(
-                            achievement.iconEmoji,
-                            style: const TextStyle(fontSize: 36),
+                        ? Icon(
+                            _getAchievementIcon(achievement.iconEmoji),
+                            size: 36,
+                            color: Colors.white,
                           )
                         : Stack(
                             alignment: Alignment.center,
                             children: [
-                              ColorFiltered(
-                                colorFilter: const ColorFilter.mode(
-                                  Colors.grey,
-                                  BlendMode.saturation,
-                                ),
-                                child: Text(
-                                  achievement.iconEmoji,
-                                  style: const TextStyle(fontSize: 36),
-                                ),
+                              Icon(
+                                _getAchievementIcon(achievement.iconEmoji),
+                                size: 36,
+                                color: Colors.grey,
                               ),
                               Icon(
                                 Icons.lock,

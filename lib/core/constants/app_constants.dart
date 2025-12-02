@@ -165,28 +165,28 @@ class AppConstants {
     ],
   };
 
-  // Completion messages
+  // Completion messages (emojis removed - use PremiumIcons.completionIcons for icons)
   static const List<String> completionMessages = [
-    '🎉 Amazing! Keep it up!',
-    '💪 You\'re crushing it!',
-    '⭐ Fantastic work!',
-    '🔥 On fire today!',
-    '✨ Excellent progress!',
-    '🌟 You\'re a star!',
-    '💎 Diamond performance!',
-    '🏆 Champion mindset!',
-    '🚀 To the moon!',
-    '👏 Well done!',
+    'Amazing! Keep it up!',
+    'You\'re crushing it!',
+    'Fantastic work!',
+    'On fire today!',
+    'Excellent progress!',
+    'You\'re a star!',
+    'Diamond performance!',
+    'Champion mindset!',
+    'To the moon!',
+    'Well done!',
   ];
 
-  // Streak milestone messages
+  // Streak milestone messages (emojis removed - use Iconsax.flame for icon)
   static Map<int, String> streakMilestones = {
-    3: '🔥 3-day streak! Building momentum!',
-    7: '🔥 Week streak! You\'re on fire!',
-    14: '🔥 2-week streak! Unstoppable!',
-    21: '🔥 21 days! Habit formed!',
-    30: '🔥 Month streak! Legendary!',
-    50: '🔥 50 days! Incredible dedication!',
-    100: '🔥 Century! You\'re a master!',
+    3: '3-day streak! Building momentum!',
+    7: 'Week streak! You\'re on fire!',
+    14: '2-week streak! Unstoppable!',
+    21: '21 days! Habit formed!',
+    30: 'Month streak! Legendary!',
+    50: '50 days! Incredible dedication!',
+    100: 'Century! You\'re a master!',
   };
 }

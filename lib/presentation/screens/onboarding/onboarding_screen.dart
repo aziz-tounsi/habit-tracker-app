@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:confetti/confetti.dart';
+import 'package:iconsax/iconsax.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/habit_suggestions.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/constants/premium_icons.dart';
+import '../../../core/constants/avatars.dart';
 import '../../../providers/habit_provider.dart';
 import '../../../providers/onboarding_provider.dart';
 import '../../widgets/common/gradient_button.dart';
@@ -335,35 +338,32 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 6,
+                  crossAxisCount: 4,
                   mainAxisSpacing: 12,
                   crossAxisSpacing: 12,
                 ),
-                itemCount: AppConstants.avatarEmojis.length,
+                itemCount: PremiumAvatars.options.length,
                 itemBuilder: (context, index) {
-                  final emoji = AppConstants.avatarEmojis[index];
-                  final isSelected = provider.userAvatar == emoji;
+                  final avatarOption = PremiumAvatars.options[index];
+                  final isSelected = provider.userAvatar == avatarOption.id;
                   return GestureDetector(
-                    onTap: () => provider.setUserAvatar(emoji),
+                    onTap: () => provider.setUserAvatar(avatarOption.id),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
-                        color: isSelected
-                            ? AppColors.primaryPurple.withAlpha(102)
-                            : Colors.white.withAlpha(25),
                         border: Border.all(
                           color: isSelected
                               ? AppColors.primaryPurple
                               : Colors.transparent,
-                          width: 2,
+                          width: 3,
                         ),
                       ),
-                      child: Center(
-                        child: Text(
-                          emoji,
-                          style: const TextStyle(fontSize: 28),
-                        ),
+                      child: GradientAvatarBuilder(
+                        seed: avatarOption.id,
+                        size: 60,
+                        gradientColors: avatarOption.gradientColors,
+                        icon: avatarOption.icon,
                       ),
                     ),
                   );
@@ -867,29 +867,34 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       builder: (context, provider, child) {
         return Stack(
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 40),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 150,
-                    height: 150,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: AppColors.primaryGradient,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primaryPurple.withAlpha(102),
-                          blurRadius: 30,
-                          offset: const Offset(0, 10),
+            SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 150,
+                      height: 150,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: AppColors.primaryGradient,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primaryPurple.withAlpha(102),
+                            blurRadius: 30,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Icon(
+                          Iconsax.flash_1,
+                          size: 70,
+                          color: Colors.white,
                         ),
-                      ],
+                      ),
                     ),
-                    child: const Center(
-                      child: Text('✨', style: TextStyle(fontSize: 70)),
-                    ),
-                  ),
                   const SizedBox(height: 40),
                   const Text(
                     'All Set!',
@@ -918,22 +923,44 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                     child: Column(
                       children: [
-                        const Text(
-                          '🎉 You earned your first stone!',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Iconsax.cup,
+                              size: 20,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 8),
+                            const Text(
+                              'You earned your first stone!',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 16),
-                        const Text(
-                          '✨ Starter Crystal',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Iconsax.flash_1,
+                              size: 24,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 8),
+                            const Text(
+                              'Starter Crystal',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 8),
                         Text(
@@ -953,7 +980,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     width: double.infinity,
                     icon: Icons.rocket_launch,
                   ),
-                ],
+                  ],
+                ),
               ),
             ),
             Align(
