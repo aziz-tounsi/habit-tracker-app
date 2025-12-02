@@ -131,6 +131,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
+                                color: Colors.white,
                               ),
                             ),
                           ],
@@ -156,13 +157,14 @@ class _HomeScreenState extends State<HomeScreen> {
                             style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
+                              color: Colors.white,
                             ),
                           ),
                           Text(
                             '${habitProvider.getTodayCompletedCount()}/${todayHabits.length}',
                             style: TextStyle(
                               fontSize: 16,
-                              color: Theme.of(context).colorScheme.onSurface.withAlpha(153),
+                              color: Colors.white.withOpacity(0.6),
                             ),
                           ),
                         ],
@@ -250,7 +252,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         fontSize: 12,
                         color: isSelected
                             ? Colors.white
-                            : Theme.of(context).colorScheme.onSurface.withAlpha(153),
+                            : Colors.white.withOpacity(0.6),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -261,7 +263,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         fontWeight: FontWeight.bold,
                         color: isSelected
                             ? Colors.white
-                            : Theme.of(context).colorScheme.onSurface,
+                            : Colors.white.withOpacity(0.9),
                       ),
                     ),
                   ],
@@ -291,6 +293,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
                 child: GlassContainer(
                   padding: const EdgeInsets.all(16),
+                  useBackdropFilter: true,
                   child: Row(
                     children: [
                       AnimatedProgressRing(
@@ -307,7 +310,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               'Progress',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Theme.of(context).colorScheme.onSurface.withAlpha(153),
+                                color: Colors.white.withOpacity(0.6),
                               ),
                             ),
                             Text(
@@ -315,13 +318,14 @@ class _HomeScreenState extends State<HomeScreen> {
                               style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
+                                color: Colors.white,
                               ),
                             ),
                             const SizedBox(height: 2),
                             Icon(
                               Icons.touch_app,
                               size: 12,
-                              color: Theme.of(context).colorScheme.onSurface.withAlpha(102),
+                              color: Colors.white.withOpacity(0.4),
                             ),
                           ],
                         ),
@@ -370,9 +374,9 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             ShaderMask(
               shaderCallback: (bounds) =>
-                  AppColors.primaryGradient.createShader(bounds),
+                  AppColors.goldGradient.createShader(bounds),
               child: const Icon(
-                Icons.emoji_events,
+                Icons.stars,
                 color: Colors.white,
                 size: 28,
               ),
@@ -426,9 +430,9 @@ class _HomeScreenState extends State<HomeScreen> {
       isScrollControlled: true,
       builder: (context) => Container(
         padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: const BoxDecoration(
+          color: AppColors.darkCard,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -438,25 +442,26 @@ class _HomeScreenState extends State<HomeScreen> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.onSurface.withAlpha(51),
+                color: Colors.white.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
             const SizedBox(height: 24),
-            Text(
+            const Text(
               'Profile Stats',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
             ),
             const SizedBox(height: 24),
             _buildStatRow(context, 'Total Habits', '${provider.totalHabits}', Icons.assignment),
             _buildStatRow(context, 'Total Completions', '${provider.totalCompletions}', Icons.check_circle),
             _buildStatRow(context, 'Current Streak', '${provider.currentMaxStreak} days', Icons.local_fire_department),
-            _buildStatRow(context, 'Longest Streak', '${provider.longestStreak} days', Icons.emoji_events),
+            _buildStatRow(context, 'Longest Streak', '${provider.longestStreak} days', Icons.military_tech),
             _buildStatRow(context, 'Total XP', '${provider.totalXP}', Icons.star),
-            _buildStatRow(context, 'Achievements', '${provider.user?.unlockedAchievements.length ?? 0}', Icons.emoji_events),
+            _buildStatRow(context, 'Achievements', '${provider.user?.unlockedAchievements.length ?? 0}', Icons.stars),
             const SizedBox(height: 24),
           ],
         ),
@@ -522,11 +527,12 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            Text(
+            const Text(
               'Level ${provider.level}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
             ),
             const SizedBox(height: 8),
@@ -534,23 +540,25 @@ class _HomeScreenState extends State<HomeScreen> {
               '${provider.totalXP} Total XP',
               style: TextStyle(
                 fontSize: 16,
-                color: Theme.of(context).colorScheme.onSurface.withAlpha(153),
+                color: Colors.white.withOpacity(0.6),
               ),
             ),
             const SizedBox(height: 24),
             // Progress to next level
             GlassContainer(
               padding: const EdgeInsets.all(20),
+              useBackdropFilter: true,
               child: Column(
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
+                      const Text(
                         'Progress to Level $nextLevel',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
+                          color: Colors.white,
                         ),
                       ),
                       Text(
@@ -558,6 +566,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
                       ),
                     ],
@@ -592,14 +601,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 Icon(
                   Iconsax.lamp_1,
                   size: 16,
-                  color: Theme.of(context).colorScheme.onSurface.withAlpha(153),
+                  color: Colors.white.withOpacity(0.6),
                 ),
                 const SizedBox(width: 8),
                 Text(
                   'Complete habits to earn XP and level up!',
                   style: TextStyle(
                     fontSize: 14,
-                    color: Theme.of(context).colorScheme.onSurface.withAlpha(153),
+                    color: Colors.white.withOpacity(0.6),
                   ),
                 ),
               ],
@@ -739,18 +748,19 @@ class _HomeScreenState extends State<HomeScreen> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.onSurface.withAlpha(13),
+              color: Colors.white.withOpacity(0.05),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, size: 20),
+            child: Icon(icon, size: 20, color: Colors.white.withOpacity(0.8)),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
+                color: Colors.white.withOpacity(0.8),
               ),
             ),
           ),
@@ -759,6 +769,7 @@ class _HomeScreenState extends State<HomeScreen> {
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
           ),
         ],
