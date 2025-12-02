@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'dart:ui';
+import 'smart_blur_container.dart';
 
+/// Glass container with blur effect
+/// Now uses SmartBlurContainer internally for enhanced blur effects
 class GlassContainer extends StatelessWidget {
   final Widget child;
   final double? width;
@@ -35,69 +37,23 @@ class GlassContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    
-    final containerChild = Container(
+    // Use SmartBlurContainer with shader gloss disabled for backward compatibility
+    return SmartBlurContainer(
       width: width,
       height: height,
       padding: padding,
-      child: child,
-    );
-    
-    return GestureDetector(
+      margin: margin,
+      borderRadius: borderRadius,
+      borderColor: borderColor,
+      baseBlur: blur,
+      baseOpacity: opacity,
       onTap: onTap,
-      child: Container(
-        width: width,
-        height: height,
-        margin: margin,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(borderRadius),
-          border: Border.all(
-            color: borderColor ?? 
-                (isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05)),
-            width: 1.0,
-          ),
-          boxShadow: [
-            // Subtle shadow for depth
-            BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
-              blurRadius: blur,
-              spreadRadius: 0,
-              offset: const Offset(0, 4),
-            ),
-            // Optional glow effect
-            if (showGlow && glowColor != null)
-              BoxShadow(
-                color: glowColor!.withOpacity(0.3),
-                blurRadius: 20,
-                spreadRadius: 2,
-              ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(borderRadius),
-          child: useBackdropFilter
-              ? BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: isDark 
-                          ? Colors.white.withOpacity(opacity * 0.8)
-                          : Colors.black.withOpacity(opacity * 0.5),
-                    ),
-                    child: containerChild,
-                  ),
-                )
-              : Container(
-                  decoration: BoxDecoration(
-                    color: isDark 
-                        ? Colors.white.withOpacity(opacity * 0.8)
-                        : Colors.black.withOpacity(opacity * 0.5),
-                  ),
-                  child: containerChild,
-                ),
-        ),
-      ),
+      enableBackdropFilter: useBackdropFilter,
+      enableShaderGloss: false, // Disabled for backward compatibility
+      showGlow: showGlow,
+      glowColor: glowColor,
+      motionFactor: 0.0, // Static, no motion
+      child: child,
     );
   }
 }

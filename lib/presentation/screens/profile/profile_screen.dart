@@ -10,7 +10,7 @@ import '../../../core/constants/avatars.dart';
 import '../../../core/constants/premium_icons.dart';
 import '../../../data/models/stone_model.dart';
 import '../../../providers/habit_provider.dart';
-import '../../widgets/common/glass_container.dart';
+import '../../widgets/common/smart_blur_container.dart';
 import '../../widgets/common/galaxy_background.dart';
 import '../../widgets/common/crystal_stone.dart';
 import '../../widgets/common/premium_stats_chart.dart';
@@ -28,11 +28,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
   DateTime? _joinDate;
   Currency _selectedCurrency = Currencies.defaultCurrency;
   String _selectedPeriod = 'Week';
+  final ScrollController _scrollController = ScrollController();
+  double _scrollProgress = 0.0;
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.hasClients) {
+      final maxScroll = _scrollController.position.maxScrollExtent;
+      final currentScroll = _scrollController.offset;
+      setState(() {
+        _scrollProgress = maxScroll > 0 ? (currentScroll / maxScroll).clamp(0.0, 1.0) : 0.0;
+      });
+    }
   }
 
   Future<void> _loadUserData() async {
@@ -59,6 +79,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           final allStones = StoneModel.allStones;
 
           return SingleChildScrollView(
+          controller: _scrollController,
           padding: const EdgeInsets.symmetric(vertical: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -85,9 +106,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 delay: const Duration(milliseconds: 100),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: GlassContainer(
+                  child: SmartBlurContainer(
                     padding: const EdgeInsets.all(24),
-                    useBackdropFilter: true,
+                    enableBackdropFilter: true,
+                    enableShaderGloss: true,
+                    motionFactor: _scrollProgress,
                     child: Column(
                       children: [
                         // Avatar with golden glowing frame
@@ -262,9 +285,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 delay: const Duration(milliseconds: 400),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: GlassContainer(
+                  child: SmartBlurContainer(
                     padding: const EdgeInsets.all(16),
-                    useBackdropFilter: true,
+                    enableBackdropFilter: true,
+                    enableShaderGloss: true,
+                    motionFactor: _scrollProgress,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -364,9 +389,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     IconData icon,
     LinearGradient gradient,
   ) {
-    return GlassContainer(
+    return SmartBlurContainer(
       padding: const EdgeInsets.all(20),
-      useBackdropFilter: true,
+      enableBackdropFilter: true,
+      enableShaderGloss: true,
+      motionFactor: _scrollProgress,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -432,9 +459,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     IconData icon,
     LinearGradient gradient,
   ) {
-    return GlassContainer(
+    return SmartBlurContainer(
       padding: const EdgeInsets.all(16),
-      useBackdropFilter: true,
+      enableBackdropFilter: true,
+      enableShaderGloss: true,
+      motionFactor: _scrollProgress,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
