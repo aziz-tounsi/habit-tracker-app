@@ -206,16 +206,17 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
         padding: const EdgeInsets.all(12),
         enableBackdropFilter: true,
         enableShaderGloss: true,
+        enableVibrancy: true,
         showGlow: isUnlocked,
         glowColor: isUnlocked ? stone.glowColor : null,
         motionFactor: _scrollProgress,
-        baseOpacity: 0.15,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             CrystalStone(
               stoneType: stone.id,
-              size: 60,
+              size: 50,
               isLocked: !isUnlocked,
               showGlow: isUnlocked,
             ),
@@ -235,10 +236,10 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
             ),
             const SizedBox(height: 4),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
                 color: _getRarityColor(stone.rarity).withOpacity(0.2),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(6),
                 border: Border.all(
                   color: _getRarityColor(stone.rarity).withOpacity(0.4),
                   width: 1,
