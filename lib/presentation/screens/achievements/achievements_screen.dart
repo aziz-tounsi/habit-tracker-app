@@ -203,28 +203,29 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
     return GestureDetector(
       onTap: () => _showStoneDetails(context, stone, isUnlocked),
       child: SmartBlurContainer(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         enableBackdropFilter: true,
         enableShaderGloss: true,
         showGlow: isUnlocked,
         glowColor: isUnlocked ? stone.glowColor : null,
         motionFactor: _scrollProgress,
+        baseOpacity: 0.15,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             CrystalStone(
               stoneType: stone.id,
-              size: 70,
+              size: 60,
               isLocked: !isUnlocked,
               showGlow: isUnlocked,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Flexible(
               child: Text(
                 stone.name,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 11,
                   fontWeight: FontWeight.w600,
                   color: isUnlocked ? Colors.white : Colors.white.withOpacity(0.4),
                 ),
@@ -234,7 +235,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
             ),
             const SizedBox(height: 4),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
               decoration: BoxDecoration(
                 color: _getRarityColor(stone.rarity).withOpacity(0.2),
                 borderRadius: BorderRadius.circular(8),
@@ -246,7 +247,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
               child: Text(
                 _getRarityName(stone.rarity),
                 style: TextStyle(
-                  fontSize: 9,
+                  fontSize: 8,
                   fontWeight: FontWeight.w600,
                   color: _getRarityColor(stone.rarity),
                 ),
