@@ -11,7 +11,8 @@ import '../../../providers/habit_provider.dart';
 import '../../../data/models/habit_model.dart';
 import '../../widgets/common/glass_container.dart';
 import '../../widgets/common/animated_progress_ring.dart';
-import '../../widgets/common/profile_header.dart';
+import '../../widgets/common/premium_profile_header.dart';
+import '../../widgets/common/smart_week_strip.dart';
 import '../../widgets/common/level_progress.dart';
 import '../../widgets/common/motivational_quote_card.dart';
 import '../../widgets/common/galaxy_background.dart';
@@ -83,23 +84,32 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 20),
-                    // Profile Header
+                    // Premium Profile Header
                     FadeInDown(
                       duration: const Duration(milliseconds: 500),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: ProfileHeader(
+                        child: PremiumProfileHeader(
                           user: user,
                           totalHabits: habitProvider.totalHabits,
-                          unlockedAchievements: user?.unlockedAchievements.length ?? 0,
+                          completedToday: habitProvider.getTodayCompletedCount(),
+                          totalToday: todayHabits.length,
                           currentStreak: habitProvider.currentMaxStreak,
-                          onTap: () => _showProfileDetails(context, habitProvider),
+                          longestStreak: habitProvider.longestStreak,
+                          levelProgress: habitProvider.levelProgress,
+                          onAvatarTap: () => _showProfileDetails(context, habitProvider),
+                          onStatsTap: () => _showLevelDetails(context, habitProvider),
                         ),
                       ),
                     ),
                     const SizedBox(height: 24),
-                    // Date strip
-                    _buildDateStrip(context),
+                    // Smart week strip with completion status
+                    SmartWeekStrip(
+                      selectedDate: _selectedDate,
+                      onSelect: (date) => setState(() => _selectedDate = date),
+                      weekDates: Helpers.getCurrentWeekDates(),
+                      completionByDate: _computeWeekCompletion(habitProvider),
+                    ),
                     const SizedBox(height: 24),
                     // Stats row
                     _buildStatsRow(context, habitProvider, progress),
@@ -207,73 +217,34 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildDateStrip(BuildContext context) {
+  /// Computes completion state for each day in the current week
+  Map<String, DayCompletionState> _computeWeekCompletion(HabitProvider habitProvider) {
+    final result = <String, DayCompletionState>{};
     final weekDates = Helpers.getCurrentWeekDates();
     
-    return FadeInLeft(
-      duration: const Duration(milliseconds: 500),
-      delay: const Duration(milliseconds: 100),
-      child: SizedBox(
-        height: 80,
-        child: ListView.builder(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          itemCount: weekDates.length,
-          itemBuilder: (context, index) {
-            final date = weekDates[index];
-            final isSelected = Helpers.isSameDay(date, _selectedDate);
-            final isToday = Helpers.isToday(date);
-            
-            return GestureDetector(
-              onTap: () {
-                setState(() => _selectedDate = date);
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: 56,
-                margin: const EdgeInsets.symmetric(horizontal: 6),
-                decoration: BoxDecoration(
-                  gradient: isSelected ? AppColors.primaryGradient : null,
-                  color: isSelected ? null : Colors.transparent,
-                  borderRadius: BorderRadius.circular(16),
-                  border: isToday && !isSelected
-                      ? Border.all(
-                          color: AppColors.primaryPurple.withAlpha(76),
-                          width: 2,
-                        )
-                      : null,
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      AppConstants.daysOfWeek[index],
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isSelected
-                            ? Colors.white
-                            : Colors.white.withOpacity(0.6),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      date.day.toString(),
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: isSelected
-                            ? Colors.white
-                            : Colors.white.withOpacity(0.9),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        ),
-      ),
-    );
+    for (final date in weekDates) {
+      final dateKey = Helpers.formatDateForStorage(date);
+      final habitsForDate = habitProvider.getHabitsForDate(date)
+          .where((h) => !h.isQuitHabit)
+          .toList();
+      
+      if (habitsForDate.isEmpty) {
+        result[dateKey] = DayCompletionState.none;
+        continue;
+      }
+      
+      final completedCount = habitsForDate.where((h) => h.isCompletedOn(dateKey)).length;
+      
+      if (completedCount == habitsForDate.length) {
+        result[dateKey] = DayCompletionState.complete;
+      } else if (completedCount > 0) {
+        result[dateKey] = DayCompletionState.partial;
+      } else {
+        result[dateKey] = DayCompletionState.none;
+      }
+    }
+    
+    return result;
   }
 
   Widget _buildStatsRow(BuildContext context, HabitProvider provider, double progress) {
