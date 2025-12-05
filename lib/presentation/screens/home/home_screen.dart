@@ -128,11 +128,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           longestStreak: habitProvider.longestStreak,
                           levelProgress: habitProvider.levelProgress,
                           onAvatarTap: () => _showProfileDetails(context, habitProvider),
-                          onStatsTap: () => _showLevelDetails(context, habitProvider),
-                          // New action row callbacks
-                          onAddHabit: () => _navigateToAddHabit(context),
-                          onLogToday: () => _showDayDetails(context, habitProvider),
-                          onInsights: () => _navigateToInsights(context),
                           // Weekly mission data
                           weeklyTargetDays: 5,
                           weeklyAchievedDays: weeklyAchievedDays,

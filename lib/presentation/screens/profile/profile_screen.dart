@@ -10,7 +10,6 @@ import '../../../providers/habit_provider.dart';
 import '../../widgets/common/galaxy_background.dart';
 import '../../widgets/common/crystal_stone.dart';
 import '../../widgets/common/premium_stats_chart.dart';
-import '../../widgets/common/premium_profile_header.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -96,26 +95,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-
-              // Premium Profile Header
-              FadeInDown(
-                duration: const Duration(milliseconds: 500),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: PremiumProfileHeader(
-                    user: user,
-                    totalHabits: habitProvider.totalHabits,
-                    completedToday: habitProvider.completedTodayCount,
-                    totalToday: habitProvider.totalTodayCount,
-                    currentStreak: habitProvider.currentMaxStreak,
-                    longestStreak: habitProvider.longestStreak,
-                    levelProgress: habitProvider.levelProgress,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
               
-              // Premium Profile Header with Golden Frame
+              // Profile User Widget - profile-focused with avatar, name, level/XP, achievements
               FadeInUp(
                 duration: const Duration(milliseconds: 500),
                 delay: const Duration(milliseconds: 100),
@@ -184,15 +165,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         const SizedBox(height: 8),
                         
-                        // Badge (Top 10%)
+                        // Level Badge
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           decoration: BoxDecoration(
-                            gradient: AppColors.goldGradient,
+                            gradient: AppColors.primaryGradient,
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.goldAccent.withOpacity(0.3),
+                                color: AppColors.primaryPurple.withOpacity(0.3),
                                 blurRadius: 10,
                                 spreadRadius: 1,
                               ),
@@ -201,18 +182,52 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.stars, color: Colors.white, size: 16),
+                              const Icon(Icons.star, color: Colors.white, size: 16),
                               const SizedBox(width: 6),
                               Text(
-                                'Top 10%',
+                                'Level ${user?.level ?? 0}',
                                 style: const TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
                                 ),
                               ),
+                              const SizedBox(width: 8),
+                              Text(
+                                '${user?.totalXP ?? 0} XP',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white.withOpacity(0.8),
+                                ),
+                              ),
                             ],
                           ),
+                        ),
+                        const SizedBox(height: 12),
+                        
+                        // Achievement count
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            ShaderMask(
+                              shaderCallback: (bounds) =>
+                                  AppColors.goldGradient.createShader(bounds),
+                              child: const Icon(
+                                Icons.emoji_events,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              '${user?.unlockedAchievements.length ?? 0} Achievements',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white.withOpacity(0.7),
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 20),
                         

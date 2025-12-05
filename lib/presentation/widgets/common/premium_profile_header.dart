@@ -15,11 +15,6 @@ class PremiumProfileHeader extends StatefulWidget {
   final int longestStreak;
   final double levelProgress;
   final VoidCallback? onAvatarTap;
-  final VoidCallback? onStatsTap;
-  // New callbacks for action row
-  final VoidCallback? onAddHabit;
-  final VoidCallback? onLogToday;
-  final VoidCallback? onInsights;
   // Weekly mission data (optional, with safe defaults)
   final int weeklyTargetDays;
   final int weeklyAchievedDays;
@@ -35,10 +30,6 @@ class PremiumProfileHeader extends StatefulWidget {
     required this.longestStreak,
     required this.levelProgress,
     this.onAvatarTap,
-    this.onStatsTap,
-    this.onAddHabit,
-    this.onLogToday,
-    this.onInsights,
     this.weeklyTargetDays = 5,
     this.weeklyAchievedDays = 0,
     this.weeklyRewardXP = 100,
@@ -250,43 +241,16 @@ class _PremiumProfileHeaderState extends State<PremiumProfileHeader>
           
           const SizedBox(height: 16),
           
-          // NEW: Streak Duo (current vs best) and Weekly Mission Pill
+          // Streak Duo (current vs best) and Weekly Mission Pill
           Row(
             children: [
-              // Streak Duo with flame indicator
+              // Single streak indicator
               Expanded(child: _buildStreakDuo()),
               const SizedBox(width: 12),
               // Weekly Mission Pill
               Expanded(child: _buildWeeklyMissionPill()),
             ],
           ),
-          
-          const SizedBox(height: 16),
-          
-          // Stats Row with Feature 2: Animated Streak
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildStatItem(
-                icon: Icons.check_circle_outline,
-                value: '${widget.completedToday}/${widget.totalToday}',
-                label: 'Today',
-                color: AppColors.accentGreen,
-              ),
-              _buildAnimatedStreakStat(),
-              _buildStatItem(
-                icon: Icons.emoji_events_outlined,
-                value: '${widget.user?.unlockedAchievements.length ?? 0}',
-                label: 'Badges',
-                color: AppColors.goldAccent,
-              ),
-            ],
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // NEW: Inline Action Row with primary "Add habit", secondary "Log today", tertiary icon "Insights"
-          _buildInlineActionRow(),
         ],
       ),
     );
@@ -529,115 +493,6 @@ class _PremiumProfileHeaderState extends State<PremiumProfileHeader>
     );
   }
 
-  // NEW: Inline Action Row - primary "Add habit", secondary "Log today", tertiary icon "Insights"
-  Widget _buildInlineActionRow() {
-    return Row(
-      children: [
-        // Primary: Add Habit (larger, gradient)
-        Expanded(
-          flex: 2,
-          child: GestureDetector(
-            onTap: () {
-              HapticFeedback.mediumImpact();
-              widget.onAddHabit?.call();
-            },
-            child: Container(
-              height: 44,
-              decoration: BoxDecoration(
-                gradient: AppColors.primaryGradient,
-                borderRadius: BorderRadius.circular(14),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primaryPurple.withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.add, size: 20, color: Colors.white),
-                  SizedBox(width: 6),
-                  Text(
-                    'Add Habit',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-        // Secondary: Log Today
-        Expanded(
-          flex: 2,
-          child: GestureDetector(
-            onTap: () {
-              HapticFeedback.mediumImpact();
-              widget.onLogToday?.call();
-            },
-            child: Container(
-              height: 44,
-              decoration: BoxDecoration(
-                color: AppColors.accentGreen.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: AppColors.accentGreen.withOpacity(0.3),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Iconsax.calendar_tick, size: 18, color: AppColors.accentGreen),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Log Today',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.accentGreen,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-        // Tertiary: Insights (icon only)
-        GestureDetector(
-          onTap: () {
-            HapticFeedback.mediumImpact();
-            widget.onInsights?.call();
-          },
-          child: Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: AppColors.accentCyan.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: AppColors.accentCyan.withOpacity(0.3),
-                width: 1,
-              ),
-            ),
-            child: Icon(
-              Iconsax.chart_2,
-              size: 20,
-              color: AppColors.accentCyan,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   // Feature 1 & 3: Avatar with mood ring and XP progress
   Widget _buildAvatarWithProgress() {
     return GestureDetector(
@@ -747,113 +602,6 @@ class _PremiumProfileHeaderState extends State<PremiumProfileHeader>
           ),
         ],
       ),
-    );
-  }
-
-  // Feature 2: Animated Streak with growing fire
-  Widget _buildAnimatedStreakStat() {
-    final streakSize = (widget.currentStreak.clamp(0, 30) / 30) * 0.5 + 0.8;
-    
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        _showStreakDetails();
-      },
-      child: Column(
-        children: [
-          AnimatedBuilder(
-            animation: _fireAnimation,
-            builder: (context, child) {
-              return Transform.scale(
-                scale: widget.currentStreak > 0 
-                    ? _fireAnimation.value * streakSize 
-                    : 1.0,
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: widget.currentStreak > 0
-                        ? Colors.orange.withOpacity(0.2)
-                        : Colors.grey.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: widget.currentStreak > 0
-                        ? [
-                            BoxShadow(
-                              color: Colors.orange.withOpacity(0.3),
-                              blurRadius: 12,
-                              spreadRadius: 1,
-                            ),
-                          ]
-                        : null,
-                  ),
-                  child: Icon(
-                    Icons.local_fire_department,
-                    size: 24,
-                    color: widget.currentStreak > 0
-                        ? Colors.orange
-                        : Colors.grey,
-                  ),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 6),
-          Text(
-            '${widget.currentStreak}',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: widget.currentStreak > 0 
-                  ? Colors.orange 
-                  : Colors.white.withOpacity(0.5),
-            ),
-          ),
-          Text(
-            'Streak',
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.white.withOpacity(0.5),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatItem({
-    required IconData icon,
-    required String value,
-    required String label,
-    required Color color,
-  }) {
-    return Column(
-      children: [
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.15),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(icon, size: 22, color: color),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            color: Colors.white.withOpacity(0.5),
-          ),
-        ),
-      ],
     );
   }
 
