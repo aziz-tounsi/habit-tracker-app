@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:iconsax/iconsax.dart';
@@ -44,24 +43,12 @@ class PremiumProfileHeader extends StatefulWidget {
 
 class _PremiumProfileHeaderState extends State<PremiumProfileHeader>
     with TickerProviderStateMixin {
-  late AnimationController _pulseController;
   late AnimationController _fireController;
-  late Animation<double> _pulseAnimation;
   late Animation<double> _fireAnimation;
 
   @override
   void initState() {
     super.initState();
-    
-    // Pulse animation for avatar ring
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2000),
-    )..repeat(reverse: true);
-    
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.08).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
     
     // Fire animation for streak
     _fireController = AnimationController(
@@ -76,44 +63,8 @@ class _PremiumProfileHeaderState extends State<PremiumProfileHeader>
 
   @override
   void dispose() {
-    _pulseController.dispose();
     _fireController.dispose();
     super.dispose();
-  }
-
-  // Feature 1: Ring accent color based on completion - using brand/neutral colors
-  Color get _ringAccentColor {
-    if (widget.totalToday == 0) return AppColors.primaryPurple;
-    final progress = widget.completedToday / widget.totalToday;
-    if (progress >= 1.0) return AppColors.accentCyan; // Perfect - cyan accent
-    if (progress >= 0.7) return AppColors.primaryPurple; // Good - purple
-    if (progress >= 0.5) return AppColors.secondaryPink; // Halfway - pink
-    if (progress >= 0.3) return AppColors.goldAccent; // Getting there - gold
-    return AppColors.primaryPurple; // Default - brand purple
-  }
-
-  // Feature 5: Daily motivation based on time + performance
-  String get _dailyMotivation {
-    final hour = DateTime.now().hour;
-    final progress = widget.totalToday > 0 
-        ? widget.completedToday / widget.totalToday 
-        : 0.0;
-    
-    if (hour < 12) {
-      // Morning
-      if (progress >= 0.5) return "Great morning start! 🌅";
-      return "Fresh day ahead! Let's go! ☀️";
-    } else if (hour < 17) {
-      // Afternoon
-      if (progress >= 1.0) return "All done! Enjoy your day! 🎉";
-      if (progress >= 0.5) return "Halfway there! Keep pushing! 💪";
-      return "Afternoon focus time! 🎯";
-    } else {
-      // Evening
-      if (progress >= 1.0) return "Perfect day! Rest well! 🌙";
-      if (progress >= 0.7) return "Almost there! Finish strong! 🔥";
-      return "Evening push! You got this! ⭐";
-    }
   }
 
   // Calculate XP to next level
@@ -158,7 +109,7 @@ class _PremiumProfileHeaderState extends State<PremiumProfileHeader>
           // Top Row: Avatar + Info + Quick Stats
           Row(
             children: [
-              // Feature 1 & 3: Mood Ring Avatar with XP Arc
+              // Clean avatar without ring
               _buildAvatarWithProgress(),
               
               const SizedBox(width: 16),
@@ -174,30 +125,6 @@ class _PremiumProfileHeaderState extends State<PremiumProfileHeader>
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    // Feature 5: Daily Motivation
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _ringAccentColor.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: _ringAccentColor.withOpacity(0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: Text(
-                        _dailyMotivation,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: _ringAccentColor,
-                        ),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -502,82 +429,48 @@ class _PremiumProfileHeaderState extends State<PremiumProfileHeader>
     );
   }
 
-  // Feature 1 & 3: Avatar with mood ring and XP progress
+  // Clean avatar without ring (per feedback)
   Widget _buildAvatarWithProgress() {
     return GestureDetector(
       onTap: () {
         HapticFeedback.mediumImpact();
         widget.onAvatarTap?.call();
       },
-      child: AnimatedBuilder(
-        animation: _pulseAnimation,
-        builder: (context, child) {
-          return Transform.scale(
-            scale: _pulseAnimation.value,
-            child: SizedBox(
-              width: 80,
-              height: 80,
-              child: Stack(
-                children: [
-                  // XP Progress Arc (Feature 3)
-                  CustomPaint(
-                    size: const Size(80, 80),
-                    painter: _XPArcPainter(
-                      progress: widget.levelProgress,
-                      color: AppColors.primaryPurple,
-                    ),
-                  ),
-                  // Ring Accent (using brand colors instead of green)
-                  Center(
-                    child: Container(
-                      width: 68,
-                      height: 68,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: _ringAccentColor,
-                          width: 3,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: _ringAccentColor.withOpacity(0.4),
-                            blurRadius: 12,
-                            spreadRadius: 2,
-                          ),
-                        ],
-                      ),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              AppColors.primaryPurple,
-                              AppColors.secondaryPink,
-                            ],
-                          ),
-                        ),
-                        child: Center(
-                          child: Text(
-                            widget.user?.name?.isNotEmpty == true
-                                ? widget.user!.name[0].toUpperCase()
-                                : 'U',
-                            style: const TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+      child: SizedBox(
+        width: 64,
+        height: 64,
+        child: Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppColors.primaryPurple,
+                AppColors.secondaryPink,
+              ],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primaryPurple.withOpacity(0.3),
+                blurRadius: 12,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: Center(
+            child: Text(
+              widget.user?.name?.isNotEmpty == true
+                  ? widget.user!.name[0].toUpperCase()
+                  : 'U',
+              style: const TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }
@@ -713,50 +606,5 @@ class _PremiumProfileHeaderState extends State<PremiumProfileHeader>
         ),
       ],
     );
-  }
-}
-
-// Custom painter for XP arc around avatar
-class _XPArcPainter extends CustomPainter {
-  final double progress;
-  final Color color;
-
-  _XPArcPainter({required this.progress, required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2 - 2;
-    
-    // Background arc
-    final bgPaint = Paint()
-      ..color = Colors.white.withOpacity(0.1)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 4
-      ..strokeCap = StrokeCap.round;
-    
-    canvas.drawCircle(center, radius, bgPaint);
-    
-    // Progress arc
-    final progressPaint = Paint()
-      ..shader = LinearGradient(
-        colors: [color, AppColors.secondaryPink],
-      ).createShader(Rect.fromCircle(center: center, radius: radius))
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 4
-      ..strokeCap = StrokeCap.round;
-    
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      -math.pi / 2, // Start from top
-      2 * math.pi * progress, // Progress angle
-      false,
-      progressPaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _XPArcPainter oldDelegate) {
-    return oldDelegate.progress != progress;
   }
 }

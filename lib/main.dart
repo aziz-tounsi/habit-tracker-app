@@ -8,7 +8,6 @@ import 'providers/habit_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/onboarding_provider.dart';
 import 'presentation/screens/home/home_screen.dart';
-import 'presentation/screens/calendar/calendar_screen.dart';
 import 'presentation/screens/statistics/statistics_screen.dart';
 import 'presentation/screens/achievements/achievements_screen.dart';
 import 'presentation/screens/profile/profile_screen.dart';
@@ -155,7 +154,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   final List<Widget> _screens = const [
     HomeScreen(),
-    CalendarScreen(),
     StatisticsScreen(),
     AchievementsScreen(),
     ProfileScreen(),
@@ -220,10 +218,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             },
             items: [
               _buildNavItem(Icons.home_outlined, Icons.home, 'Home', 0),
-              _buildNavItem(Icons.calendar_today_outlined, Icons.calendar_today, 'Calendar', 1),
-              _buildNavItem(Icons.bar_chart_outlined, Icons.bar_chart, 'Stats', 2),
-              _buildNavItem(Icons.emoji_events_outlined, Icons.emoji_events, 'Awards', 3),
-              _buildNavItem(Icons.person_outline, Icons.person, 'Profile', 4),
+              _buildNavItem(Icons.bar_chart_outlined, Icons.bar_chart, 'Stats', 1),
+              _buildNavItem(Icons.emoji_events_outlined, Icons.emoji_events, 'Awards', 2),
+              _buildNavItem(Icons.person_outline, Icons.person, 'Profile', 3),
             ],
           ),
         ),

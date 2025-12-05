@@ -194,6 +194,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           onHabitToggle: (habit) {
                             habitProvider.toggleHabitCompletion(habit.id, date: _selectedDate);
                           },
+                          onHeaderTap: () => _navigateToTodayFocus(context),
                         ),
                       ),
                     if (Helpers.isToday(_selectedDate) && todayHabits.isNotEmpty)

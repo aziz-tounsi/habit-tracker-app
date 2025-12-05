@@ -44,6 +44,9 @@ class TodayFocusPanel extends StatelessWidget {
   /// Callback when a habit completion is toggled
   final ValueChanged<HabitModel>? onHabitToggle;
 
+  /// Callback when the header is tapped (to navigate to Today's Focus page)
+  final VoidCallback? onHeaderTap;
+
   const TodayFocusPanel({
     super.key,
     required this.focusHabits,
@@ -53,6 +56,7 @@ class TodayFocusPanel extends StatelessWidget {
     this.onReschedule,
     this.onHabitTap,
     this.onHabitToggle,
+    this.onHeaderTap,
   });
 
   @override
@@ -77,6 +81,7 @@ class TodayFocusPanel extends StatelessWidget {
       onReschedule: onReschedule,
       onHabitTap: onHabitTap,
       onHabitToggle: onHabitToggle,
+      onHeaderTap: onHeaderTap,
     );
   }
 }
@@ -93,6 +98,7 @@ class _TodayFocusPanelContent extends StatelessWidget {
   final VoidCallback? onReschedule;
   final ValueChanged<HabitModel>? onHabitTap;
   final ValueChanged<HabitModel>? onHabitToggle;
+  final VoidCallback? onHeaderTap;
 
   const _TodayFocusPanelContent({
     required this.focusHabits,
@@ -105,6 +111,7 @@ class _TodayFocusPanelContent extends StatelessWidget {
     this.onReschedule,
     this.onHabitTap,
     this.onHabitToggle,
+    this.onHeaderTap,
   });
 
   @override
@@ -159,111 +166,132 @@ class _TodayFocusPanelContent extends StatelessWidget {
   }
 
   Widget _buildHeader() {
-    return Row(
-      children: [
-        // Icon with urgency pulse
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            gradient: urgentCount > 0
-                ? AppColors.warningGradient
-                : AppColors.primaryGradient,
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: [
-              BoxShadow(
-                color: urgentCount > 0
-                    ? AppColors.warning.withOpacity(0.3)
-                    : AppColors.primaryPurple.withOpacity(0.3),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Icon(
-            urgentCount > 0 ? Iconsax.timer_1 : Iconsax.task_square5,
-            size: 20,
-            color: Colors.white,
-          ),
-        ),
-        const SizedBox(width: 12),
-        // Title
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Today\'s Focus',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              Text(
-                allCompleted
-                    ? 'All done! 🎉'
-                    : urgentCount > 0
-                        ? '$urgentCount urgent, $remainingCount remaining'
-                        : '$remainingCount habits remaining',
-                style: TextStyle(
-                  fontSize: 12,
+    return GestureDetector(
+      onTap: () {
+        if (onHeaderTap != null) {
+          HapticFeedback.lightImpact();
+          onHeaderTap!();
+        }
+      },
+      behavior: HitTestBehavior.opaque,
+      child: Row(
+        children: [
+          // Icon with urgency pulse
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              gradient: urgentCount > 0
+                  ? AppColors.warningGradient
+                  : AppColors.primaryGradient,
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: [
+                BoxShadow(
                   color: urgentCount > 0
-                      ? AppColors.warning
-                      : Colors.white.withOpacity(0.6),
+                      ? AppColors.warning.withOpacity(0.3)
+                      : AppColors.primaryPurple.withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
                 ),
-              ),
-            ],
+              ],
+            ),
+            child: Icon(
+              urgentCount > 0 ? Iconsax.timer_1 : Iconsax.task_square5,
+              size: 20,
+              color: Colors.white,
+            ),
           ),
-        ),
-        // Status badge
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          decoration: BoxDecoration(
-            color: allCompleted
-                ? AppColors.accentGreen.withOpacity(0.2)
-                : urgentCount > 0
-                    ? AppColors.warning.withOpacity(0.2)
-                    : AppColors.accentCyan.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                allCompleted
-                    ? Icons.check_circle
-                    : urgentCount > 0
-                        ? Icons.warning_rounded
-                        : Icons.pending,
-                size: 14,
-                color: allCompleted
-                    ? AppColors.accentGreen
-                    : urgentCount > 0
+          const SizedBox(width: 12),
+          // Title
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Text(
+                      'Today\'s Focus',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    if (onHeaderTap != null) ...[
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.chevron_right,
+                        size: 18,
+                        color: Colors.white.withOpacity(0.6),
+                      ),
+                    ],
+                  ],
+                ),
+                Text(
+                  allCompleted
+                      ? 'All done! 🎉'
+                      : urgentCount > 0
+                          ? '$urgentCount urgent, $remainingCount remaining'
+                          : '$remainingCount habits remaining',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: urgentCount > 0
                         ? AppColors.warning
-                        : AppColors.accentCyan,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                allCompleted
-                    ? 'Done'
-                    : urgentCount > 0
-                        ? 'Urgent'
-                        : 'In Progress',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
+                        : Colors.white.withOpacity(0.6),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Status badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: allCompleted
+                  ? AppColors.accentGreen.withOpacity(0.2)
+                  : urgentCount > 0
+                      ? AppColors.warning.withOpacity(0.2)
+                      : AppColors.accentCyan.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  allCompleted
+                      ? Icons.check_circle
+                      : urgentCount > 0
+                          ? Icons.warning_rounded
+                          : Icons.pending,
+                  size: 14,
                   color: allCompleted
                       ? AppColors.accentGreen
                       : urgentCount > 0
                           ? AppColors.warning
                           : AppColors.accentCyan,
                 ),
-              ),
-            ],
+                const SizedBox(width: 4),
+                Text(
+                  allCompleted
+                      ? 'Done'
+                      : urgentCount > 0
+                          ? 'Urgent'
+                          : 'In Progress',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: allCompleted
+                        ? AppColors.accentGreen
+                        : urgentCount > 0
+                            ? AppColors.warning
+                            : AppColors.accentCyan,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
