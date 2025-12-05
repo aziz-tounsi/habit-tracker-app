@@ -130,9 +130,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     
     final category = habitData['category'] as String;
     final reminderTime = _getReminderTime(category, provider.schedulePreference);
-    final preferredDays = provider.preferredDays.isNotEmpty 
-        ? provider.preferredDays 
-        : [1, 2, 3, 4, 5, 6, 7];
+    // Use preferred days from provider, defaulting to all days if somehow empty
+    final preferredDays = provider.preferredDays.isEmpty 
+        ? [1, 2, 3, 4, 5, 6, 7]
+        : provider.preferredDays;
     
     final habitProvider = context.read<HabitProvider>();
     await habitProvider.addHabit(
