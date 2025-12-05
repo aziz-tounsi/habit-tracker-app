@@ -1,7 +1,13 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../providers/habit_provider.dart';
@@ -20,12 +26,18 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final TextEditingController _nameController = TextEditingController();
   bool _isEditingName = false;
+  bool _soundsEnabled = true;
+  bool _hapticsEnabled = true;
+  TimeOfDay _quietStart = const TimeOfDay(hour: 22, minute: 0);
+  TimeOfDay _quietEnd = const TimeOfDay(hour: 8, minute: 0);
+  bool _loadingPrefs = true;
 
   @override
   void initState() {
     super.initState();
     final user = context.read<HabitProvider>().user;
     _nameController.text = user?.name ?? 'User';
+    _loadLocalSettings();
   }
 
   @override
@@ -36,6 +48,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_loadingPrefs) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     return GalaxyBackground(
       child: Consumer2<HabitProvider, ThemeProvider>(
         builder: (context, habitProvider, themeProvider, child) {
@@ -364,9 +380,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   subtitle: user?.notificationsEnabled == true ? 'Enabled' : 'Disabled',
                   trailing: Switch(
                     value: user?.notificationsEnabled ?? true,
-                    onChanged: (value) {
+                    onChanged: (value) async {
                       HapticFeedback.lightImpact();
-                      habitProvider.updateUser(notificationsEnabled: value);
+                      if (value) {
+                        final granted = await habitProvider.requestNotificationPermission();
+                        if (!granted) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Enable notification permission in settings'),
+                              ),
+                            );
+                          }
+                          setState(() {});
+                          return;
+                        }
+                        await habitProvider.updateUser(notificationsEnabled: true);
+                      } else {
+                        await habitProvider.disableAllNotifications();
+                      }
+                      setState(() {});
                     },
                   ),
                 ),
@@ -374,23 +407,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   context,
                   icon: Icons.nightlight_round,
                   title: 'Quiet Hours',
-                  subtitle: '10:00 PM - 8:00 AM',
+                  subtitle: '${_formatTime(_quietStart)} - ${_formatTime(_quietEnd)}',
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
+                  onTap: () async {
                     HapticFeedback.lightImpact();
-                    // TODO: Implement quiet hours picker
+                    await _pickQuietHours();
                   },
                 ),
                 _buildSettingsTile(
                   context,
                   icon: Icons.vibration,
-                  title: 'Sounds & Haptics',
-                  subtitle: 'Enabled',
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    HapticFeedback.lightImpact();
-                    // TODO: Implement sounds settings
-                  },
+                  title: 'Sounds',
+                  subtitle: _soundsEnabled ? 'Enabled' : 'Muted',
+                  trailing: Switch(
+                    value: _soundsEnabled,
+                    onChanged: (value) async {
+                      HapticFeedback.lightImpact();
+                      await _savePrefs(sounds: value);
+                    },
+                  ),
+                ),
+                _buildSettingsTile(
+                  context,
+                  icon: Icons.touch_app,
+                  title: 'Haptics',
+                  subtitle: _hapticsEnabled ? 'Enabled' : 'Disabled',
+                  trailing: Switch(
+                    value: _hapticsEnabled,
+                    onChanged: (value) async {
+                      HapticFeedback.lightImpact();
+                      await _savePrefs(haptics: value);
+                    },
+                  ),
                 ),
               ],
             ),
@@ -427,9 +475,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title: 'Export Data',
                   subtitle: 'Backup your habits',
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
+                  onTap: () async {
                     HapticFeedback.lightImpact();
-                    _showComingSoonDialog(context);
+                    await _exportData(context, habitProvider);
                   },
                 ),
                 _buildSettingsTile(
@@ -438,9 +486,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title: 'Import Data',
                   subtitle: 'Restore from backup',
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
+                  onTap: () async {
                     HapticFeedback.lightImpact();
-                    _showComingSoonDialog(context);
+                    await _importData(context, habitProvider);
                   },
                 ),
                 _buildSettingsTile(
@@ -499,7 +547,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
                     HapticFeedback.lightImpact();
-                    _showComingSoonDialog(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Thanks for rating!')),
+                    );
                   },
                 ),
                 _buildSettingsTile(
@@ -509,7 +559,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
                     HapticFeedback.lightImpact();
-                    _showComingSoonDialog(context);
+                    Clipboard.setData(const ClipboardData(text: 'Check out this Habit Tracker app!'));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Share text copied to clipboard')),
+                    );
                   },
                 ),
               ],
@@ -828,5 +881,177 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _loadLocalSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    final startStr = prefs.getString('settings_quiet_start');
+    final endStr = prefs.getString('settings_quiet_end');
+    final start = startStr != null ? _parseTime(startStr) : _quietStart;
+    final end = endStr != null ? _parseTime(endStr) : _quietEnd;
+
+    // Persist defaults so NotificationService can read quiet hours even before edits
+    if (startStr == null) {
+      await prefs.setString('settings_quiet_start', _formatPrefsTime(start));
+    }
+    if (endStr == null) {
+      await prefs.setString('settings_quiet_end', _formatPrefsTime(end));
+    }
+
+    setState(() {
+      _soundsEnabled = prefs.getBool('settings_sounds') ?? true;
+      _hapticsEnabled = prefs.getBool('settings_haptics') ?? true;
+      _quietStart = start;
+      _quietEnd = end;
+      _loadingPrefs = false;
+    });
+  }
+
+  Future<void> _savePrefs({bool? sounds, bool? haptics, TimeOfDay? start, TimeOfDay? end}) async {
+    final prefs = await SharedPreferences.getInstance();
+    bool quietChanged = false;
+    if (sounds != null) {
+      await prefs.setBool('settings_sounds', sounds);
+      setState(() => _soundsEnabled = sounds);
+    }
+    if (haptics != null) {
+      await prefs.setBool('settings_haptics', haptics);
+      setState(() => _hapticsEnabled = haptics);
+    }
+    if (start != null) {
+      await prefs.setString('settings_quiet_start', _formatPrefsTime(start));
+      setState(() => _quietStart = start);
+      quietChanged = true;
+    }
+    if (end != null) {
+      await prefs.setString('settings_quiet_end', _formatPrefsTime(end));
+      setState(() => _quietEnd = end);
+      quietChanged = true;
+    }
+
+    if (quietChanged) {
+      final habitProvider = context.read<HabitProvider>();
+      await habitProvider.rescheduleAllReminders();
+    }
+  }
+
+  TimeOfDay _parseTime(String value) {
+    final parts = value.split(':');
+    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+  }
+
+  String _formatPrefsTime(TimeOfDay time) => '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+
+  String _formatTime(TimeOfDay time) {
+    final hour = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
+    final suffix = time.period == DayPeriod.am ? 'AM' : 'PM';
+    final minute = time.minute.toString().padLeft(2, '0');
+    return '$hour:$minute $suffix';
+  }
+
+  Future<void> _pickQuietHours() async {
+    final start = await showTimePicker(context: context, initialTime: _quietStart);
+    if (start == null) return;
+    final end = await showTimePicker(context: context, initialTime: _quietEnd);
+    if (end == null) return;
+    await _savePrefs(start: start, end: end);
+  }
+
+  Future<void> _exportData(BuildContext context, HabitProvider provider) async {
+    final dir = await getApplicationDocumentsDirectory();
+    final file = File('${dir.path}/habit_backup.json');
+
+    final user = provider.user;
+    final habits = provider.habits;
+    final data = {
+      'user': user == null
+          ? null
+          : {
+              'id': user.id,
+              'name': user.name,
+              'avatarEmoji': user.avatarEmoji,
+              'totalXP': user.totalXP,
+              'createdAt': user.createdAt.toIso8601String(),
+              'hasCompletedOnboarding': user.hasCompletedOnboarding,
+              'isDarkMode': user.isDarkMode,
+              'accentColorIndex': user.accentColorIndex,
+              'notificationsEnabled': user.notificationsEnabled,
+              'unlockedAchievements': user.unlockedAchievements,
+              'unlockedStones': user.unlockedStones,
+            },
+      'habits': habits
+          .map((h) => {
+                'id': h.id,
+                'name': h.name,
+                'description': h.description,
+                'iconIndex': h.iconIndex,
+                'colorIndex': h.colorIndex,
+                'category': h.category,
+                'scheduledDays': h.scheduledDays,
+                'targetDaysPerWeek': h.targetDaysPerWeek,
+                'createdAt': h.createdAt.toIso8601String(),
+                'reminderTime': h.reminderTime,
+                'isArchived': h.isArchived,
+                'currentStreak': h.currentStreak,
+                'longestStreak': h.longestStreak,
+                'totalCompletions': h.totalCompletions,
+                'completedDates': h.completedDates,
+                'isQuitHabit': h.isQuitHabit,
+                'quitStartDate': h.quitStartDate?.toIso8601String(),
+                'moneySavedPerDay': h.moneySavedPerDay,
+                'relapses': h.relapses?.map((d) => d.toIso8601String()).toList(),
+              })
+          .toList(),
+    };
+
+    await file.writeAsString(jsonEncode(data));
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Backup saved to ${file.path}')),
+      );
+    }
+  }
+
+  Future<void> _importData(BuildContext context, HabitProvider provider) async {
+    final dir = await getApplicationDocumentsDirectory();
+    final result = await FilePicker.platform.pickFiles(
+      dialogTitle: 'Select Habit Backup',
+      type: FileType.custom,
+      allowedExtensions: const ['json'],
+      initialDirectory: (Platform.isAndroid || Platform.isIOS) ? null : dir.path,
+    );
+
+    if (result == null || result.files.single.path == null) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No backup selected')),
+        );
+      }
+      return;
+    }
+
+    final file = File(result.files.single.path!);
+    if (!await file.exists()) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('File not found: ${file.path}')),
+        );
+      }
+      return;
+    }
+
+    final content = await file.readAsString();
+    final decoded = jsonDecode(content) as Map<String, dynamic>;
+    final userData = decoded['user'] as Map<String, dynamic>?;
+    final habitsData = (decoded['habits'] as List<dynamic>? ?? []);
+
+    await provider.restoreFromBackup(userData, habitsData);
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Data imported successfully')),
+      );
+    }
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
 
@@ -9,6 +10,8 @@ class NotificationService {
 
   final FlutterLocalNotificationsPlugin _notifications = FlutterLocalNotificationsPlugin();
   bool _initialized = false;
+  int? _quietStartMinutes; // 0-1439 minutes from midnight
+  int? _quietEndMinutes;   // 0-1439 minutes from midnight
 
   Future<void> init() async {
     if (_initialized) return;
@@ -68,6 +71,7 @@ class NotificationService {
     required String time, // HH:mm format
     required List<int> days, // 0 = Monday, 6 = Sunday
   }) async {
+    await _refreshQuietHours();
     await cancelNotification(id);
 
     final parts = time.split(':');
@@ -77,11 +81,15 @@ class NotificationService {
     for (var day in days) {
       final weekDay = day + 1; // Convert to 1 = Monday, 7 = Sunday
       
+      final scheduledTime = _applyQuietHours(
+        _nextInstanceOfDay(weekDay, hour, minute),
+      );
+
       await _notifications.zonedSchedule(
         id * 10 + day, // Unique ID for each day
         'Habit Reminder',
         "Time to complete: $habitName",
-        _nextInstanceOfDay(weekDay, hour, minute),
+        scheduledTime,
         NotificationDetails(
           android: AndroidNotificationDetails(
             'habit_reminders',
@@ -113,6 +121,80 @@ class NotificationService {
     }
 
     return scheduled;
+  }
+
+  Future<void> _refreshQuietHours() async {
+    final prefs = await SharedPreferences.getInstance();
+    _quietStartMinutes = _parsePrefsTimeToMinutes(
+      prefs.getString('settings_quiet_start'),
+    );
+    _quietEndMinutes = _parsePrefsTimeToMinutes(
+      prefs.getString('settings_quiet_end'),
+    );
+  }
+
+  int? _parsePrefsTimeToMinutes(String? value) {
+    if (value == null) return null;
+    final parts = value.split(':');
+    if (parts.length != 2) return null;
+    final hour = int.tryParse(parts[0]);
+    final minute = int.tryParse(parts[1]);
+    if (hour == null || minute == null) return null;
+    return hour * 60 + minute;
+  }
+
+  tz.TZDateTime _applyQuietHours(tz.TZDateTime scheduled) {
+    if (_quietStartMinutes == null || _quietEndMinutes == null) return scheduled;
+    if (_quietStartMinutes == _quietEndMinutes) return scheduled;
+
+    final minuteOfDay = scheduled.hour * 60 + scheduled.minute;
+
+    // Quiet hours that don't cross midnight (e.g., 13:00-15:00)
+    if (_quietStartMinutes! < _quietEndMinutes!) {
+      final isQuiet =
+          minuteOfDay >= _quietStartMinutes! && minuteOfDay < _quietEndMinutes!;
+      if (!isQuiet) return scheduled;
+
+      // Move to quiet end on the same day
+      final adjustedTime = _quietEndMinutes!;
+      return tz.TZDateTime(
+        scheduled.location,
+        scheduled.year,
+        scheduled.month,
+        scheduled.day,
+        adjustedTime ~/ 60,
+        adjustedTime % 60,
+      );
+    }
+
+    // Quiet hours that cross midnight (e.g., 22:00-08:00)
+    final isQuiet =
+        minuteOfDay >= _quietStartMinutes! || minuteOfDay < _quietEndMinutes!;
+    if (!isQuiet) return scheduled;
+
+    final adjustedTime = _quietEndMinutes!;
+    // If scheduled during late-night quiet window, shift to next morning at quiet end
+    if (minuteOfDay >= _quietStartMinutes!) {
+      final nextDay = scheduled.add(const Duration(days: 1));
+      return tz.TZDateTime(
+        scheduled.location,
+        nextDay.year,
+        nextDay.month,
+        nextDay.day,
+        adjustedTime ~/ 60,
+        adjustedTime % 60,
+      );
+    }
+
+    // Early-morning quiet time: move to quiet end of the same day
+    return tz.TZDateTime(
+      scheduled.location,
+      scheduled.year,
+      scheduled.month,
+      scheduled.day,
+      adjustedTime ~/ 60,
+      adjustedTime % 60,
+    );
   }
 
   Future<void> cancelNotification(int id) async {

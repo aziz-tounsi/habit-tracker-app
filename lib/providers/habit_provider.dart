@@ -258,6 +258,111 @@ class HabitProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> clearAllData() async {
+    _isLoading = true;
+    notifyListeners();
+
+    await _notificationService.cancelAllNotifications();
+    await _repository.clearAllData();
+
+    // Recreate a fresh default user and empty habit list
+    _user = await _repository.createDefaultUser();
+    _habits = [];
+    _isLoading = false;
+    _error = null;
+    notifyListeners();
+  }
+
+  Future<bool> requestNotificationPermission() async {
+    await _notificationService.init();
+    return _notificationService.requestPermissions();
+  }
+
+  Future<void> disableAllNotifications() async {
+    await _notificationService.cancelAllNotifications();
+    await updateUser(notificationsEnabled: false);
+  }
+
+  Future<void> rescheduleAllReminders() async {
+    if (_user?.notificationsEnabled != true) return;
+    await _notificationService.init();
+
+    for (final habit in _habits) {
+      if (habit.reminderTime == null) continue;
+      await _notificationService.scheduleHabitReminder(
+        id: habit.id.hashCode,
+        habitName: habit.name,
+        time: habit.reminderTime!,
+        days: habit.scheduledDays,
+      );
+    }
+  }
+
+  Future<void> restoreFromBackup(
+    Map<String, dynamic>? userData,
+    List<dynamic> habitsData,
+  ) async {
+    _isLoading = true;
+    notifyListeners();
+
+    await clearAllData();
+
+    if (userData != null) {
+      final restoredUser = UserModel(
+        id: userData['id'] as String,
+        name: userData['name'] as String? ?? 'User',
+        avatarEmoji: userData['avatarEmoji'] as String? ?? '😊',
+        totalXP: userData['totalXP'] as int? ?? 0,
+        createdAt: DateTime.tryParse(userData['createdAt'] ?? '') ?? DateTime.now(),
+        hasCompletedOnboarding: userData['hasCompletedOnboarding'] as bool? ?? false,
+        isDarkMode: userData['isDarkMode'] as bool? ?? true,
+        accentColorIndex: userData['accentColorIndex'] as int? ?? 0,
+        notificationsEnabled: userData['notificationsEnabled'] as bool? ?? true,
+        unlockedAchievements: (userData['unlockedAchievements'] as List<dynamic>? ?? []).cast<String>(),
+        unlockedStones: (userData['unlockedStones'] as List<dynamic>? ?? []).cast<String>(),
+      );
+      await _repository.saveUser(restoredUser);
+      _user = restoredUser;
+    }
+
+    for (final raw in habitsData) {
+      final map = raw as Map<String, dynamic>;
+      final habit = HabitModel(
+        id: map['id'] as String,
+        name: map['name'] as String,
+        description: map['description'] as String?,
+        iconIndex: map['iconIndex'] as int? ?? 0,
+        colorIndex: map['colorIndex'] as int? ?? 0,
+        category: map['category'] as String? ?? 'General',
+        scheduledDays: (map['scheduledDays'] as List<dynamic>? ?? []).cast<int>(),
+        targetDaysPerWeek: map['targetDaysPerWeek'] as int? ?? 7,
+        createdAt: DateTime.tryParse(map['createdAt'] ?? '') ?? DateTime.now(),
+        reminderTime: map['reminderTime'] as String?,
+        isArchived: map['isArchived'] as bool? ?? false,
+        currentStreak: map['currentStreak'] as int? ?? 0,
+        longestStreak: map['longestStreak'] as int? ?? 0,
+        totalCompletions: map['totalCompletions'] as int? ?? 0,
+        completedDates: (map['completedDates'] as List<dynamic>? ?? []).cast<String>(),
+        isQuitHabit: map['isQuitHabit'] as bool? ?? false,
+        quitStartDate: map['quitStartDate'] != null
+            ? DateTime.tryParse(map['quitStartDate'])
+            : null,
+        moneySavedPerDay: (map['moneySavedPerDay'] as num?)?.toDouble(),
+        relapses: (map['relapses'] as List<dynamic>? ?? [])
+            .map<DateTime?>((d) => d == null ? null : DateTime.tryParse(d))
+            .whereType<DateTime>()
+            .toList(),
+      );
+
+      await _repository.addHabit(habit);
+    }
+
+    _habits = _repository.getAllHabits();
+    _isLoading = false;
+    _error = null;
+    notifyListeners();
+  }
+
   // Statistics
   Map<String, int> getWeeklyCompletions() {
     return _repository.getWeeklyCompletions();
@@ -316,19 +421,6 @@ class HabitProvider extends ChangeNotifier {
 
     await _repository.updateHabit(updatedHabit);
     _habits = _repository.getAllHabits();
-    notifyListeners();
-  }
-
-  // Clear all data (habits and user data)
-  Future<void> clearAllData() async {
-    try {
-      await _repository.clearAllData();
-      _habits = [];
-      _user = await _repository.createDefaultUser();
-      _error = null; // Clear any previous error on success
-    } catch (e) {
-      _error = 'Failed to clear data: $e';
-    }
     notifyListeners();
   }
 }
