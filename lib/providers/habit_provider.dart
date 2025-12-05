@@ -325,6 +325,7 @@ class HabitProvider extends ChangeNotifier {
       await _repository.clearAllData();
       _habits = [];
       _user = await _repository.createDefaultUser();
+      _error = null; // Clear any previous error on success
     } catch (e) {
       _error = 'Failed to clear data: $e';
     }
