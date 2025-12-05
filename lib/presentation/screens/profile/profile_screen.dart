@@ -7,10 +7,13 @@ import 'package:iconsax/iconsax.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/currencies.dart';
 import '../../../core/constants/avatars.dart';
+import '../../../data/models/stone_model.dart';
 import '../../../providers/habit_provider.dart';
 import '../../widgets/common/galaxy_background.dart';
 import '../../widgets/common/premium_stats_chart.dart';
+import '../../widgets/common/stone_showcase.dart';
 import '../settings/settings_screen.dart';
+import '../achievements/achievements_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -245,6 +248,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ],
                     ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              
+              // Crystal Stone Showcase
+              FadeInUp(
+                duration: const Duration(milliseconds: 500),
+                delay: const Duration(milliseconds: 150),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: StoneShowcase(
+                    unlockedStoneIds: user?.unlockedStones ?? [],
+                    onStoneTap: (stone) {
+                      _showStoneDetails(context, stone, true);
+                    },
                   ),
                 ),
               ),
@@ -771,6 +790,173 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() {
         _selectedCurrency = selected;
       });
+    }
+  }
+
+  void _showStoneDetails(BuildContext context, StoneModel stone, bool isUnlocked) {
+    HapticFeedback.mediumImpact();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              const Color(0xFF1A1A2E),
+              AppColors.darkCard,
+            ],
+          ),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            
+            // Stone preview
+            Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: stone.glowColor.withOpacity(0.4),
+                    blurRadius: 40,
+                    spreadRadius: 10,
+                  ),
+                ],
+              ),
+              child: ClipOval(
+                child: Image.asset(
+                  stone.assetPath,
+                  width: 100,
+                  height: 100,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [stone.primaryColor, stone.secondaryColor],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            
+            ShaderMask(
+              shaderCallback: (bounds) => LinearGradient(
+                colors: [stone.primaryColor, stone.glowColor],
+              ).createShader(bounds),
+              child: Text(
+                stone.name,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              decoration: BoxDecoration(
+                color: _getRarityColor(stone.rarity).withOpacity(0.2),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: _getRarityColor(stone.rarity).withOpacity(0.5),
+                  width: 1,
+                ),
+              ),
+              child: Text(
+                _getRarityName(stone.rarity),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: _getRarityColor(stone.rarity),
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                stone.description,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontStyle: FontStyle.italic,
+                  color: Colors.white.withOpacity(0.7),
+                  height: 1.4,
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.star, color: Colors.amber, size: 20),
+                const SizedBox(width: 6),
+                Text(
+                  '+${stone.xpReward} XP',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.amber,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color _getRarityColor(StoneRarity rarity) {
+    switch (rarity) {
+      case StoneRarity.common:
+        return const Color(0xFF94A3B8);
+      case StoneRarity.rare:
+        return const Color(0xFF3B82F6);
+      case StoneRarity.epic:
+        return const Color(0xFF8B5CF6);
+      case StoneRarity.legendary:
+        return const Color(0xFFFFD700);
+    }
+  }
+
+  String _getRarityName(StoneRarity rarity) {
+    switch (rarity) {
+      case StoneRarity.common:
+        return 'COMMON';
+      case StoneRarity.rare:
+        return 'RARE';
+      case StoneRarity.epic:
+        return 'EPIC';
+      case StoneRarity.legendary:
+        return 'LEGENDARY';
     }
   }
 }

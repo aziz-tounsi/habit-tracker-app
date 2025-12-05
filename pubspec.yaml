@@ -58,6 +58,10 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   
+  # Crystal Stone Assets
+  assets:
+    - assets/stones/
+  
   # Shaders for premium effects
   shaders:
     - assets/shaders/gloss_shader.frag
