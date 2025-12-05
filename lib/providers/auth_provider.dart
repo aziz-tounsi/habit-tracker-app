@@ -196,4 +196,99 @@ class AuthProvider extends ChangeNotifier {
 
     notifyListeners();
   }
+
+  /// Send password reset email
+  /// This is a scaffold that simulates sending a reset email
+  Future<bool> forgotPassword({required String email}) async {
+    _state = AuthState.loading;
+    _error = null;
+    notifyListeners();
+
+    try {
+      // Simulate network delay
+      await Future.delayed(const Duration(milliseconds: 1200));
+
+      // Basic validation
+      if (email.isEmpty || !email.contains('@')) {
+        throw Exception('Please enter a valid email address');
+      }
+
+      // Scaffold: In a real app, this would send a password reset email
+      // For now, we just simulate success
+      _state = AuthState.unauthenticated;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      _state = AuthState.error;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Sign in with Google
+  /// This is a scaffold for future Google Sign-In integration
+  Future<bool> signInWithGoogle() async {
+    _state = AuthState.loading;
+    _error = null;
+    notifyListeners();
+
+    try {
+      // Simulate network delay
+      await Future.delayed(const Duration(milliseconds: 800));
+
+      // Scaffold: In a real app, this would use google_sign_in package
+      // For now, we simulate a successful sign in
+      const uuid = Uuid();
+      _userId = 'google_${uuid.v4()}';
+      _userEmail = 'user@gmail.com';
+
+      // Persist auth state
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('auth_user_id', _userId!);
+      await prefs.setString('auth_user_email', _userEmail!);
+
+      _state = AuthState.authenticated;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      _state = AuthState.error;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Sign in with Apple
+  /// This is a scaffold for future Apple Sign-In integration
+  Future<bool> signInWithApple() async {
+    _state = AuthState.loading;
+    _error = null;
+    notifyListeners();
+
+    try {
+      // Simulate network delay
+      await Future.delayed(const Duration(milliseconds: 800));
+
+      // Scaffold: In a real app, this would use sign_in_with_apple package
+      // For now, we simulate a successful sign in
+      const uuid = Uuid();
+      _userId = 'apple_${uuid.v4()}';
+      _userEmail = 'user@privaterelay.appleid.com';
+
+      // Persist auth state
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('auth_user_id', _userId!);
+      await prefs.setString('auth_user_email', _userEmail!);
+
+      _state = AuthState.authenticated;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      _state = AuthState.error;
+      notifyListeners();
+      return false;
+    }
+  }
 }
