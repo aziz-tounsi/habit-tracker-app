@@ -135,6 +135,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           weeklyRewardXP: 100,
                           // Navigate to weekly mission screen
                           onWeeklyMissionTap: () => _navigateToWeeklyMission(context),
+                          // Streak tap opens same sheet as level/progress
+                          onStreakTap: () => _showProfileDetails(context, habitProvider),
                         ),
                       ),
                     ),
@@ -517,16 +519,6 @@ class _HomeScreenState extends State<HomeScreen> {
     
     _showConfetti();
     Helpers.showSnackBar(context, 'All habits completed! 🎉');
-  }
-
-  /// Navigate to add habit screen
-  void _navigateToAddHabit(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const AddHabitScreen(),
-      ),
-    );
   }
 
   /// Show day details bottom sheet

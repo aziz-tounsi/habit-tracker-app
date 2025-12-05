@@ -20,6 +20,8 @@ class PremiumProfileHeader extends StatefulWidget {
   final int weeklyRewardXP;
   // Navigation callback for weekly mission chip
   final VoidCallback? onWeeklyMissionTap;
+  // Callback for streak tap - opens same sheet as level/progress
+  final VoidCallback? onStreakTap;
 
   const PremiumProfileHeader({
     super.key,
@@ -35,6 +37,7 @@ class PremiumProfileHeader extends StatefulWidget {
     this.weeklyAchievedDays = 0,
     this.weeklyRewardXP = 100,
     this.onWeeklyMissionTap,
+    this.onStreakTap,
   });
 
   @override
@@ -276,12 +279,18 @@ class _PremiumProfileHeaderState extends State<PremiumProfileHeader>
     );
   }
 
-  // NEW: Streak Duo showing current vs best with flame indicator
+  // Streak indicator - clicking opens same sheet as level/progress (via callback)
   Widget _buildStreakDuo() {
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
-        _showStreakDetails();
+        // Use the provided callback to open the same sheet as level/progress
+        if (widget.onStreakTap != null) {
+          widget.onStreakTap!();
+        } else {
+          // Fallback to internal streak details if no callback provided
+          _showStreakDetails();
+        }
       },
       child: Container(
         padding: const EdgeInsets.all(12),
