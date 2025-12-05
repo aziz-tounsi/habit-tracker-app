@@ -20,6 +20,11 @@ class AuthProvider extends ChangeNotifier {
   String? _userEmail;
   String? _error;
 
+  // Email validation pattern
+  static final RegExp _emailRegex = RegExp(
+    r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+  );
+
   // Getters
   AuthState get state => _state;
   String? get userId => _userId;
@@ -27,6 +32,11 @@ class AuthProvider extends ChangeNotifier {
   String? get error => _error;
   bool get isAuthenticated => _state == AuthState.authenticated;
   bool get isLoading => _state == AuthState.loading;
+
+  /// Validate email format
+  bool _isValidEmail(String email) {
+    return _emailRegex.hasMatch(email);
+  }
 
   /// Initialize auth provider - check for existing session
   Future<void> init() async {
@@ -68,7 +78,7 @@ class AuthProvider extends ChangeNotifier {
       await Future.delayed(const Duration(milliseconds: 800));
 
       // Basic validation
-      if (email.isEmpty || !email.contains('@')) {
+      if (email.isEmpty || !_isValidEmail(email)) {
         throw Exception('Please enter a valid email address');
       }
       if (password.isEmpty || password.length < 6) {
@@ -112,7 +122,7 @@ class AuthProvider extends ChangeNotifier {
       await Future.delayed(const Duration(milliseconds: 800));
 
       // Basic validation
-      if (email.isEmpty || !email.contains('@')) {
+      if (email.isEmpty || !_isValidEmail(email)) {
         throw Exception('Please enter a valid email address');
       }
       if (password.isEmpty || password.length < 6) {
@@ -209,7 +219,7 @@ class AuthProvider extends ChangeNotifier {
       await Future.delayed(const Duration(milliseconds: 1200));
 
       // Basic validation
-      if (email.isEmpty || !email.contains('@')) {
+      if (email.isEmpty || !_isValidEmail(email)) {
         throw Exception('Please enter a valid email address');
       }
 
@@ -238,10 +248,11 @@ class AuthProvider extends ChangeNotifier {
       await Future.delayed(const Duration(milliseconds: 800));
 
       // Scaffold: In a real app, this would use google_sign_in package
-      // For now, we simulate a successful sign in
+      // For now, we simulate a successful sign in with a unique email
       const uuid = Uuid();
+      final uniqueId = uuid.v4().substring(0, 8);
       _userId = 'google_${uuid.v4()}';
-      _userEmail = 'user@gmail.com';
+      _userEmail = 'user_$uniqueId@gmail.com';
 
       // Persist auth state
       final prefs = await SharedPreferences.getInstance();
@@ -271,10 +282,11 @@ class AuthProvider extends ChangeNotifier {
       await Future.delayed(const Duration(milliseconds: 800));
 
       // Scaffold: In a real app, this would use sign_in_with_apple package
-      // For now, we simulate a successful sign in
+      // For now, we simulate a successful sign in with a unique email
       const uuid = Uuid();
+      final uniqueId = uuid.v4().substring(0, 8);
       _userId = 'apple_${uuid.v4()}';
-      _userEmail = 'user@privaterelay.appleid.com';
+      _userEmail = 'user_$uniqueId@privaterelay.appleid.com';
 
       // Persist auth state
       final prefs = await SharedPreferences.getInstance();

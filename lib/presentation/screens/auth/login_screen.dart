@@ -26,6 +26,26 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
   bool _acceptedTerms = false;
 
+  // Password strength constants
+  static const double _baseStrengthForMinLength = 0.2;
+  static const double _bonusStrengthForMediumLength = 0.1;
+  static const double _bonusStrengthForLongLength = 0.1;
+  static const double _strengthForLowercase = 0.15;
+  static const double _strengthForUppercase = 0.15;
+  static const double _strengthForNumber = 0.15;
+  static const double _strengthForSpecialChar = 0.15;
+  
+  // Email validation pattern
+  static final RegExp _emailRegex = RegExp(
+    r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+  );
+  
+  // Password character patterns
+  static final RegExp _lowercasePattern = RegExp(r'[a-z]');
+  static final RegExp _uppercasePattern = RegExp(r'[A-Z]');
+  static final RegExp _numberPattern = RegExp(r'[0-9]');
+  static final RegExp _specialCharPattern = RegExp(r'[!@#$%^&*(),.?":{}|<>\-_=+\[\]\\;/~`]');
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -48,22 +68,22 @@ class _LoginScreenState extends State<LoginScreen> {
     
     double strength = 0.0;
     
-    // Length check
-    if (password.length >= 6) strength += 0.2;
-    if (password.length >= 8) strength += 0.1;
-    if (password.length >= 12) strength += 0.1;
+    // Length checks
+    if (password.length >= 6) strength += _baseStrengthForMinLength;
+    if (password.length >= 8) strength += _bonusStrengthForMediumLength;
+    if (password.length >= 12) strength += _bonusStrengthForLongLength;
     
     // Contains lowercase
-    if (password.contains(RegExp(r'[a-z]'))) strength += 0.15;
+    if (password.contains(_lowercasePattern)) strength += _strengthForLowercase;
     
     // Contains uppercase
-    if (password.contains(RegExp(r'[A-Z]'))) strength += 0.15;
+    if (password.contains(_uppercasePattern)) strength += _strengthForUppercase;
     
     // Contains number
-    if (password.contains(RegExp(r'[0-9]'))) strength += 0.15;
+    if (password.contains(_numberPattern)) strength += _strengthForNumber;
     
     // Contains special character
-    if (password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) strength += 0.15;
+    if (password.contains(_specialCharPattern)) strength += _strengthForSpecialChar;
     
     return strength.clamp(0.0, 1.0);
   }
@@ -79,6 +99,11 @@ class _LoginScreenState extends State<LoginScreen> {
     if (strength < 0.6) return 'Medium';
     if (strength < 0.8) return 'Strong';
     return 'Very Strong';
+  }
+
+  /// Validate email format
+  bool _isValidEmail(String email) {
+    return _emailRegex.hasMatch(email);
   }
 
   Future<void> _submit() async {
@@ -364,7 +389,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   if (value == null || value.isEmpty) {
                                     return 'Please enter your email';
                                   }
-                                  if (!value.contains('@')) {
+                                  if (!_isValidEmail(value)) {
                                     return 'Please enter a valid email';
                                   }
                                   return null;

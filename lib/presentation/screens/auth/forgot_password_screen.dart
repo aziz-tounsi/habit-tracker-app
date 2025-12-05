@@ -23,6 +23,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
   bool _emailSent = false;
   late AnimationController _checkmarkController;
 
+  // Email validation pattern
+  static final RegExp _emailRegex = RegExp(
+    r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+  );
+
+  /// Validate email format
+  bool _isValidEmail(String email) {
+    return _emailRegex.hasMatch(email);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -200,7 +210,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
                                     if (value == null || value.isEmpty) {
                                       return 'Please enter your email';
                                     }
-                                    if (!value.contains('@')) {
+                                    if (!_isValidEmail(value)) {
                                       return 'Please enter a valid email';
                                     }
                                     return null;
