@@ -1,12 +1,23 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
+import '../../../data/models/stone_model.dart';
 
-/// 3D Crystal Stone Widget with radial gradients and glow effects
-class CrystalStone extends StatelessWidget {
+/// Grayscale color filter matrix for locked stones
+/// Uses luminance coefficients (Rec. 709) with reduced opacity
+const List<double> _grayscaleLockedMatrix = <double>[
+  0.2126, 0.7152, 0.0722, 0, 0, // Red channel
+  0.2126, 0.7152, 0.0722, 0, 0, // Green channel
+  0.2126, 0.7152, 0.0722, 0, 0, // Blue channel
+  0, 0, 0, 0.6, 0,              // Alpha channel (60% opacity)
+];
+
+/// 3D Crystal Stone Widget with PNG assets and magical effects
+class CrystalStone extends StatefulWidget {
   final String stoneType;
   final double size;
   final bool isLocked;
   final bool showGlow;
+  final bool animate;
   
   const CrystalStone({
     super.key,
@@ -14,216 +25,303 @@ class CrystalStone extends StatelessWidget {
     this.size = 80,
     this.isLocked = false,
     this.showGlow = true,
+    this.animate = true,
   });
 
   @override
-  Widget build(BuildContext context) {
-    final colors = _getStoneColors(stoneType);
+  State<CrystalStone> createState() => _CrystalStoneState();
+}
+
+class _CrystalStoneState extends State<CrystalStone>
+    with TickerProviderStateMixin {
+  late AnimationController _floatController;
+  late AnimationController _glowController;
+  late Animation<double> _floatAnimation;
+  late Animation<double> _glowAnimation;
+
+  @override
+  void initState() {
+    super.initState();
     
+    // Floating animation
+    _floatController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    );
+    _floatAnimation = Tween<double>(begin: -3, end: 3).animate(
+      CurvedAnimation(parent: _floatController, curve: Curves.easeInOut),
+    );
+    
+    // Glow pulsing animation
+    _glowController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    );
+    _glowAnimation = Tween<double>(begin: 0.4, end: 0.8).animate(
+      CurvedAnimation(parent: _glowController, curve: Curves.easeInOut),
+    );
+    
+    if (widget.animate && !widget.isLocked) {
+      _floatController.repeat(reverse: true);
+      _glowController.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void didUpdateWidget(CrystalStone oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.animate && !widget.isLocked) {
+      if (!_floatController.isAnimating) {
+        _floatController.repeat(reverse: true);
+      }
+      if (!_glowController.isAnimating) {
+        _glowController.repeat(reverse: true);
+      }
+    } else {
+      _floatController.stop();
+      _glowController.stop();
+    }
+  }
+
+  @override
+  void dispose() {
+    _floatController.dispose();
+    _glowController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final stone = StoneModel.getById(widget.stoneType);
+    
+    return SizedBox(
+      width: widget.size * 1.4,
+      height: widget.size * 1.4,
+      child: AnimatedBuilder(
+        animation: Listenable.merge([_floatAnimation, _glowAnimation]),
+        builder: (context, child) {
+          return Stack(
+            alignment: Alignment.center,
+            children: [
+              // Animated magical glow background (unlocked only)
+              if (!widget.isLocked && widget.showGlow && stone != null)
+                _buildMagicalGlow(stone),
+              
+              // Stone with floating effect
+              Transform.translate(
+                offset: Offset(0, widget.isLocked ? 0 : _floatAnimation.value),
+                child: _buildStoneImage(stone),
+              ),
+              
+              // Lock overlay for locked stones
+              if (widget.isLocked)
+                _buildLockOverlay(),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildMagicalGlow(StoneModel stone) {
     return Container(
-      width: size,
-      height: size,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Outer glow effect (only if unlocked and showGlow is true)
-          if (!isLocked && showGlow)
-            Container(
-              width: size * 1.4,
-              height: size * 1.4,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: colors[0].withOpacity(0.4),
-                    blurRadius: 30,
-                    spreadRadius: 5,
-                  ),
-                  BoxShadow(
-                    color: colors[1].withOpacity(0.3),
-                    blurRadius: 20,
-                    spreadRadius: 2,
-                  ),
-                ],
-              ),
-            ),
-          
-          // Main crystal orb with radial gradient
-          Container(
-            width: size,
-            height: size,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: isLocked
-                    ? [
-                        const Color(0xFF2C2C2E),
-                        const Color(0xFF1C1C1E),
-                        const Color(0xFF0D0D0D),
-                      ]
-                    : [
-                        colors[0],
-                        colors[1],
-                        colors[2],
-                      ],
-                stops: const [0.0, 0.6, 1.0],
-                center: const Alignment(-0.3, -0.3),
-              ),
-              boxShadow: [
-                if (!isLocked)
-                  BoxShadow(
-                    color: colors[0].withOpacity(0.5),
-                    blurRadius: 15,
-                    spreadRadius: 1,
-                    offset: const Offset(0, 5),
-                  ),
-              ],
-            ),
-            child: Stack(
-              children: [
-                // Inner glow/shadow for depth
-                Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        Colors.black.withOpacity(0),
-                        Colors.black.withOpacity(isLocked ? 0.7 : 0.3),
-                      ],
-                      stops: const [0.5, 1.0],
-                      center: const Alignment(0.4, 0.4),
-                    ),
-                  ),
-                ),
-                
-                // Shine/reflection overlay
-                if (!isLocked)
-                  Positioned(
-                    top: size * 0.15,
-                    left: size * 0.15,
-                    child: Container(
-                      width: size * 0.35,
-                      height: size * 0.35,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: [
-                            Colors.white.withOpacity(0.6),
-                            Colors.white.withOpacity(0.2),
-                            Colors.white.withOpacity(0),
-                          ],
-                          stops: const [0.0, 0.5, 1.0],
-                        ),
-                      ),
-                    ),
-                  ),
-                
-                // Secondary shine for more depth
-                if (!isLocked)
-                  Positioned(
-                    bottom: size * 0.2,
-                    right: size * 0.2,
-                    child: Container(
-                      width: size * 0.2,
-                      height: size * 0.2,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: [
-                            Colors.white.withOpacity(0.3),
-                            Colors.white.withOpacity(0),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+      width: widget.size * 1.3,
+      height: widget.size * 1.3,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: stone.glowColor.withOpacity(_glowAnimation.value * 0.6),
+            blurRadius: 25,
+            spreadRadius: 8,
           ),
-          
-          // Lock icon for locked stones
-          if (isLocked)
-            Icon(
-              Icons.lock,
-              color: Colors.white.withOpacity(0.3),
-              size: size * 0.4,
-            ),
+          BoxShadow(
+            color: stone.primaryColor.withOpacity(_glowAnimation.value * 0.4),
+            blurRadius: 40,
+            spreadRadius: 3,
+          ),
+          BoxShadow(
+            color: stone.secondaryColor.withOpacity(_glowAnimation.value * 0.3),
+            blurRadius: 50,
+            spreadRadius: 1,
+          ),
         ],
       ),
     );
   }
 
-  /// Get colors for each stone type
-  List<Color> _getStoneColors(String type) {
-    switch (type.toLowerCase()) {
-      case 'amethyst':
-        return [
-          const Color(0xFF9F7AEA), // Light purple
-          const Color(0xFF7C3AED), // Deep purple
-          const Color(0xFF5B21B6), // Darkest purple
-        ];
-      case 'ruby':
-        return [
-          const Color(0xFFF87171), // Light red
-          const Color(0xFFEF4444), // Red
-          const Color(0xFFDC2626), // Dark red
-        ];
-      case 'sapphire':
-        return [
-          const Color(0xFF60A5FA), // Light blue
-          const Color(0xFF3B82F6), // Blue
-          const Color(0xFF1E40AF), // Dark blue
-        ];
-      case 'emerald':
-        return [
-          const Color(0xFF34D399), // Light green
-          const Color(0xFF10B981), // Emerald green
-          const Color(0xFF059669), // Dark green
-        ];
-      case 'diamond':
-        return [
-          const Color(0xFFFFFFFF), // White
-          const Color(0xFFE0F2FE), // Ice blue
-          const Color(0xFFBAE6FD), // Crystal blue
-        ];
-      case 'opal':
-        return [
-          const Color(0xFFEC4899), // Pink
-          const Color(0xFF8B5CF6), // Purple
-          const Color(0xFF06B6D4), // Cyan
-        ];
-      case 'citrine':
-        return [
-          const Color(0xFFFBBF24), // Light yellow
-          const Color(0xFFF59E0B), // Amber
-          const Color(0xFFEA580C), // Orange
-        ];
-      case 'rose_quartz':
-        return [
-          const Color(0xFFFBCAFE), // Light pink
-          const Color(0xFFF9A8D4), // Pink
-          const Color(0xFFEC4899), // Deep pink
-        ];
-      case 'topaz':
-        return [
-          const Color(0xFFFBBF24), // Gold
-          const Color(0xFFF59E0B), // Amber
-          const Color(0xFFEA580C), // Orange
-        ];
-      case 'obsidian':
-        return [
-          const Color(0xFF6B21A8), // Dark purple
-          const Color(0xFF27272A), // Dark gray
-          const Color(0xFF18181B), // Black
-        ];
-      default:
-        // Default to purple gradient
-        return [
-          const Color(0xFF9F7AEA),
-          const Color(0xFF7C3AED),
-          const Color(0xFF5B21B6),
-        ];
+  Widget _buildStoneImage(StoneModel? stone) {
+    if (stone == null) {
+      return _buildFallbackStone();
     }
+
+    Widget stoneImage = ClipOval(
+      child: Image.asset(
+        stone.assetPath,
+        width: widget.size,
+        height: widget.size,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return _buildFallbackStone();
+        },
+      ),
+    );
+
+    // Apply grayscale and dark overlay for locked stones
+    if (widget.isLocked) {
+      stoneImage = ColorFiltered(
+        colorFilter: const ColorFilter.matrix(_grayscaleLockedMatrix),
+        child: stoneImage,
+      );
+    }
+
+    return Container(
+      width: widget.size,
+      height: widget.size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: widget.isLocked
+            ? null
+            : [
+                BoxShadow(
+                  color: (stone.primaryColor).withOpacity(0.3),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+      ),
+      child: stoneImage,
+    );
+  }
+
+  Widget _buildFallbackStone() {
+    // Fallback gradient orb if image fails to load
+    return Container(
+      width: widget.size,
+      height: widget.size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          colors: widget.isLocked
+              ? [
+                  const Color(0xFF2C2C2E),
+                  const Color(0xFF1C1C1E),
+                  const Color(0xFF0D0D0D),
+                ]
+              : [
+                  const Color(0xFF9F7AEA),
+                  const Color(0xFF7C3AED),
+                  const Color(0xFF5B21B6),
+                ],
+          stops: const [0.0, 0.6, 1.0],
+          center: const Alignment(-0.3, -0.3),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLockOverlay() {
+    return Container(
+      width: widget.size,
+      height: widget.size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.black.withOpacity(0.3),
+      ),
+      child: Icon(
+        Icons.lock_outline,
+        color: Colors.white.withOpacity(0.5),
+        size: widget.size * 0.35,
+      ),
+    );
+  }
+}
+
+/// Animated stone with magical background gradient
+class AnimatedCrystalStone extends StatefulWidget {
+  final String stoneType;
+  final double size;
+  final bool isLocked;
+
+  const AnimatedCrystalStone({
+    super.key,
+    required this.stoneType,
+    this.size = 80,
+    this.isLocked = false,
+  });
+
+  @override
+  State<AnimatedCrystalStone> createState() => _AnimatedCrystalStoneState();
+}
+
+class _AnimatedCrystalStoneState extends State<AnimatedCrystalStone>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _gradientController;
+
+  @override
+  void initState() {
+    super.initState();
+    _gradientController = AnimationController(
+      duration: const Duration(seconds: 3),
+      vsync: this,
+    );
+    if (!widget.isLocked) {
+      _gradientController.repeat();
+    }
+  }
+
+  @override
+  void dispose() {
+    _gradientController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final stone = StoneModel.getById(widget.stoneType);
+    
+    return AnimatedBuilder(
+      animation: _gradientController,
+      builder: (context, child) {
+        return Container(
+          width: widget.size * 1.5,
+          height: widget.size * 1.5,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(widget.size),
+            gradient: widget.isLocked
+                ? null
+                : SweepGradient(
+                    center: Alignment.center,
+                    startAngle: _gradientController.value * 2 * math.pi,
+                    endAngle: (_gradientController.value * 2 * math.pi) + (2 * math.pi),
+                    colors: stone != null
+                        ? [
+                            stone.primaryColor.withOpacity(0.3),
+                            stone.secondaryColor.withOpacity(0.2),
+                            stone.glowColor.withOpacity(0.3),
+                            stone.primaryColor.withOpacity(0.2),
+                            stone.primaryColor.withOpacity(0.3),
+                          ]
+                        : [
+                            Colors.purple.withOpacity(0.3),
+                            Colors.blue.withOpacity(0.2),
+                            Colors.cyan.withOpacity(0.3),
+                            Colors.purple.withOpacity(0.2),
+                            Colors.purple.withOpacity(0.3),
+                          ],
+                  ),
+          ),
+          child: Center(
+            child: CrystalStone(
+              stoneType: widget.stoneType,
+              size: widget.size,
+              isLocked: widget.isLocked,
+              showGlow: !widget.isLocked,
+            ),
+          ),
+        );
+      },
+    );
   }
 }
 
@@ -245,6 +343,7 @@ class SmallCrystalStone extends StatelessWidget {
       size: 40,
       isLocked: isLocked,
       showGlow: false,
+      animate: false,
     );
   }
 }
