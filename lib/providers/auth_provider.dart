@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 
 /// Authentication state enum
 enum AuthState {
@@ -74,8 +75,9 @@ class AuthProvider extends ChangeNotifier {
         throw Exception('Password must be at least 6 characters');
       }
 
-      // Generate a unique user ID based on email
-      _userId = 'user_${email.hashCode.abs()}';
+      // Generate a unique user ID using UUID
+      const uuid = Uuid();
+      _userId = 'user_${uuid.v4()}';
       _userEmail = email;
 
       // Persist auth state
@@ -117,8 +119,9 @@ class AuthProvider extends ChangeNotifier {
         throw Exception('Password must be at least 6 characters');
       }
 
-      // Generate a unique user ID based on email
-      _userId = 'user_${email.hashCode.abs()}';
+      // Generate a unique user ID using UUID
+      const uuid = Uuid();
+      _userId = 'user_${uuid.v4()}';
       _userEmail = email;
 
       // Persist auth state
@@ -149,6 +152,7 @@ class AuthProvider extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('auth_user_id');
       await prefs.remove('auth_user_email');
+      await prefs.remove('user_name');
 
       _userId = null;
       _userEmail = null;

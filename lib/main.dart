@@ -61,12 +61,19 @@ class HabitTrackerApp extends StatelessWidget {
 class AppWrapper extends StatelessWidget {
   const AppWrapper({super.key});
 
+  /// Helper to check if app is still loading
+  bool _isLoading(HabitProvider habitProvider, AuthProvider authProvider) {
+    return habitProvider.isLoading || 
+           authProvider.state == AuthState.initial || 
+           authProvider.state == AuthState.loading;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer2<HabitProvider, AuthProvider>(
       builder: (context, habitProvider, authProvider, child) {
         // Show loading screen while initializing
-        if (habitProvider.isLoading || authProvider.state == AuthState.initial || authProvider.state == AuthState.loading) {
+        if (_isLoading(habitProvider, authProvider)) {
           return const LoadingScreen();
         }
 
