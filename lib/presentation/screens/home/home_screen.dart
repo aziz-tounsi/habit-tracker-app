@@ -16,7 +16,6 @@ import '../../widgets/common/smart_week_strip.dart';
 import '../../widgets/common/motivational_quote_card.dart';
 import '../../widgets/common/galaxy_background.dart';
 import '../../widgets/common/achievements_carousel.dart';
-import '../../widgets/common/today_focus_panel.dart';
 import '../../widgets/common/day_detail_bottom_sheet.dart';
 import '../../widgets/habit/habit_list.dart';
 import '../../widgets/quit/quit_habit_card.dart';
@@ -175,32 +174,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    // NEW: Today Focus Panel (only shown if there are habits due)
-                    if (Helpers.isToday(_selectedDate) && todayHabits.isNotEmpty)
-                      FadeInUp(
-                        duration: const Duration(milliseconds: 500),
-                        delay: const Duration(milliseconds: 200),
-                        child: TodayFocusPanel(
-                          focusHabits: _buildFocusHabitsData(habitProvider, todayHabits),
-                          xpReward: 50,
-                          onCompleteAll: () => _completeAllHabits(context, habitProvider, todayHabits),
-                          onSnooze: () {
-                            HapticFeedback.lightImpact();
-                            Helpers.showSnackBar(context, 'Snooze feature coming soon!');
-                          },
-                          onReschedule: () {
-                            HapticFeedback.lightImpact();
-                            Helpers.showSnackBar(context, 'Reschedule feature coming soon!');
-                          },
-                          onHabitTap: (habit) => _navigateToEditHabit(context, habit),
-                          onHabitToggle: (habit) {
-                            habitProvider.toggleHabitCompletion(habit.id, date: _selectedDate);
-                          },
-                          onHeaderTap: () => _navigateToTodayFocus(context),
-                        ),
-                      ),
-                    if (Helpers.isToday(_selectedDate) && todayHabits.isNotEmpty)
-                      const SizedBox(height: 24),
+                    // Today Focus widget removed - accessible only via Focus floating button
                     // Motivational Quote
                     FadeInUp(
                       duration: const Duration(milliseconds: 500),
@@ -467,45 +441,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return achievementsToShow;
   }
 
-  /// Build focus habits data for the Today Focus Panel
-  List<FocusHabitData> _buildFocusHabitsData(HabitProvider habitProvider, List<HabitModel> habits) {
-    final dateKey = Helpers.formatDateForStorage(_selectedDate);
-    final now = DateTime.now();
-    
-    return habits.map((habit) {
-      final isCompleted = habit.isCompletedOn(dateKey);
-      
-      // Determine urgency (habits with reminders that are overdue)
-      bool isUrgent = false;
-      String? dueTime;
-      
-      // Habits are only urgent for today's view
-      if (Helpers.isToday(_selectedDate) && habit.reminderTime != null && !isCompleted) {
-        try {
-          final parts = habit.reminderTime!.split(':');
-          final reminderHour = int.parse(parts[0]);
-          final reminderMinute = int.parse(parts[1]);
-          dueTime = habit.reminderTime;
-          
-          // If current time is past reminder time, it's urgent
-          if (now.hour > reminderHour || 
-              (now.hour == reminderHour && now.minute > reminderMinute)) {
-            isUrgent = true;
-          }
-        } catch (e) {
-          // Invalid time format, ignore
-        }
-      }
-      
-      return FocusHabitData(
-        habit: habit,
-        isCompleted: isCompleted,
-        isUrgent: isUrgent,
-        dueTime: dueTime,
-      );
-    }).toList();
-  }
-
   /// Complete all habits for the day
   void _completeAllHabits(BuildContext context, HabitProvider habitProvider, List<HabitModel> habits) {
     HapticFeedback.heavyImpact();
@@ -591,17 +526,6 @@ class _HomeScreenState extends State<HomeScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           _buildQuickActionItem(
-            icon: Iconsax.task_square5,
-            label: 'Focus',
-            color: AppColors.primaryPurple,
-            onTap: () {
-              HapticFeedback.lightImpact();
-              // Navigate to dedicated Today's Focus page
-              _navigateToTodayFocus(context);
-            },
-          ),
-          const SizedBox(width: 4),
-          _buildQuickActionItem(
             icon: Iconsax.calendar_1,
             label: 'Calendar',
             color: AppColors.accentCyan,
@@ -613,13 +537,13 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(width: 4),
           _buildQuickActionItem(
-            icon: Iconsax.medal_star5,
-            label: 'Awards',
-            color: AppColors.goldAccent,
+            icon: Iconsax.task_square5,
+            label: 'Focus',
+            color: AppColors.primaryPurple,
             onTap: () {
               HapticFeedback.lightImpact();
-              // Navigate to dedicated achievements page
-              _navigateToAchievementsPage(context);
+              // Navigate to dedicated Today's Focus page
+              _navigateToTodayFocus(context);
             },
           ),
         ],

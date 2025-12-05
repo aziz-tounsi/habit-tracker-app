@@ -6,6 +6,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../providers/habit_provider.dart';
 import '../../../providers/theme_provider.dart';
+import '../../../providers/auth_provider.dart';
 import '../../widgets/common/glass_container.dart';
 import '../../widgets/common/galaxy_background.dart';
 
@@ -92,6 +93,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 duration: const Duration(milliseconds: 500),
                 delay: const Duration(milliseconds: 400),
                 child: _buildAboutSection(context),
+              ),
+              const SizedBox(height: 24),
+              // Account section
+              FadeInUp(
+                duration: const Duration(milliseconds: 500),
+                delay: const Duration(milliseconds: 450),
+                child: _buildAccountSection(context),
               ),
               const SizedBox(height: 100),
             ],
@@ -734,6 +742,89 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
             style: TextButton.styleFrom(foregroundColor: const Color(0xFFEF4444)),
             child: const Text('Clear All'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAccountSection(BuildContext context) {
+    final authProvider = context.read<AuthProvider>();
+    final userEmail = authProvider.userEmail;
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Account',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          GlassContainer(
+            padding: const EdgeInsets.all(4),
+            child: Column(
+              children: [
+                if (userEmail != null)
+                  _buildSettingsTile(
+                    context,
+                    icon: Icons.email,
+                    title: 'Email',
+                    subtitle: userEmail,
+                  ),
+                if (userEmail != null)
+                  const Divider(height: 1),
+                _buildSettingsTile(
+                  context,
+                  icon: Icons.logout,
+                  title: 'Sign Out',
+                  subtitle: 'Log out of your account',
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    HapticFeedback.mediumImpact();
+                    _showLogoutDialog(context);
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.logout, color: AppColors.primaryPurple),
+            SizedBox(width: 12),
+            Text('Sign Out?'),
+          ],
+        ),
+        content: const Text(
+          'Are you sure you want to sign out? You can sign back in anytime.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final authProvider = context.read<AuthProvider>();
+              await authProvider.signOut();
+            },
+            style: TextButton.styleFrom(foregroundColor: AppColors.primaryPurple),
+            child: const Text('Sign Out'),
           ),
         ],
       ),
