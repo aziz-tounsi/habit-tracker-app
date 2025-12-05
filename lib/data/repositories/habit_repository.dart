@@ -292,4 +292,10 @@ class HabitRepository {
     
     return completions;
   }
+
+  // Clear all data
+  Future<void> clearAllData() async {
+    await _habitsBox.clear();
+    await _userBox.clear();
+  }
 }

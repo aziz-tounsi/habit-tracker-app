@@ -302,7 +302,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onChanged: (value) => themeProvider.setDarkMode(value),
                   ),
                 ),
-                const Divider(height: 1),
                 // Accent color
                 _buildSettingsTile(
                   context,
@@ -371,7 +370,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     },
                   ),
                 ),
-                const Divider(height: 1),
                 _buildSettingsTile(
                   context,
                   icon: Icons.nightlight_round,
@@ -383,7 +381,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     // TODO: Implement quiet hours picker
                   },
                 ),
-                const Divider(height: 1),
                 _buildSettingsTile(
                   context,
                   icon: Icons.vibration,
@@ -435,7 +432,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _showComingSoonDialog(context);
                   },
                 ),
-                const Divider(height: 1),
                 _buildSettingsTile(
                   context,
                   icon: Icons.download,
@@ -447,7 +443,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _showComingSoonDialog(context);
                   },
                 ),
-                const Divider(height: 1),
                 _buildSettingsTile(
                   context,
                   icon: Icons.delete_forever,
@@ -491,14 +486,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title: 'Version',
                   subtitle: AppConstants.appVersion,
                 ),
-                const Divider(height: 1),
                 _buildSettingsTile(
                   context,
                   icon: Icons.code,
                   title: 'Made with ❤️',
                   subtitle: 'Flutter & Dart',
                 ),
-                const Divider(height: 1),
                 _buildSettingsTile(
                   context,
                   icon: Icons.star_rate,
@@ -509,7 +502,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _showComingSoonDialog(context);
                   },
                 ),
-                const Divider(height: 1),
                 _buildSettingsTile(
                   context,
                   icon: Icons.share,
@@ -735,10 +727,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // TODO: Implement clear all data
-              _showComingSoonDialog(context);
+            onPressed: () async {
+              Navigator.pop(context); // Close dialog
+              await provider.clearAllData();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('All data has been cleared'),
+                    backgroundColor: AppColors.success,
+                  ),
+                );
+                // Pop back to profile screen - the app will handle state changes
+                Navigator.of(context).pop();
+              }
             },
             style: TextButton.styleFrom(foregroundColor: const Color(0xFFEF4444)),
             child: const Text('Clear All'),
@@ -776,8 +777,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     title: 'Email',
                     subtitle: userEmail,
                   ),
-                if (userEmail != null)
-                  const Divider(height: 1),
                 _buildSettingsTile(
                   context,
                   icon: Icons.logout,
