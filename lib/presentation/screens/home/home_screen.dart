@@ -9,16 +9,21 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/helpers.dart';
 import '../../../providers/habit_provider.dart';
 import '../../../data/models/habit_model.dart';
+import '../../../data/models/achievement_model.dart';
 import '../../widgets/common/glass_container.dart';
 import '../../widgets/common/animated_progress_ring.dart';
-import '../../widgets/common/profile_header.dart';
+import '../../widgets/common/premium_profile_header.dart';
+import '../../widgets/common/smart_week_strip.dart';
 import '../../widgets/common/level_progress.dart';
 import '../../widgets/common/motivational_quote_card.dart';
 import '../../widgets/common/galaxy_background.dart';
+import '../../widgets/common/achievements_carousel.dart';
+import '../../widgets/common/today_focus_panel.dart';
+import '../../widgets/common/day_detail_bottom_sheet.dart';
 import '../../widgets/habit/habit_list.dart';
-import '../../widgets/animations/scale_animation.dart';
 import '../../widgets/quit/quit_habit_card.dart';
 import '../add_habit/add_habit_screen.dart';
+import '../statistics/statistics_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -30,11 +35,13 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late ConfettiController _confettiController;
   DateTime _selectedDate = DateTime.now();
+  List<DateTime> _currentWeekDates = [];
 
   @override
   void initState() {
     super.initState();
     _confettiController = ConfettiController(duration: const Duration(seconds: 2));
+    _currentWeekDates = Helpers.getCurrentWeekDates();
   }
 
   @override
@@ -47,6 +54,29 @@ class _HomeScreenState extends State<HomeScreen> {
     _confettiController.play();
   }
 
+  void _goToPreviousWeek() {
+    setState(() {
+      final firstDayOfCurrentWeek = _currentWeekDates.first;
+      final firstDayOfPreviousWeek = firstDayOfCurrentWeek.subtract(const Duration(days: 7));
+      _currentWeekDates = List.generate(7, (i) => firstDayOfPreviousWeek.add(Duration(days: i)));
+    });
+  }
+
+  void _goToNextWeek() {
+    setState(() {
+      final firstDayOfCurrentWeek = _currentWeekDates.first;
+      final firstDayOfNextWeek = firstDayOfCurrentWeek.add(const Duration(days: 7));
+      _currentWeekDates = List.generate(7, (i) => firstDayOfNextWeek.add(Duration(days: i)));
+    });
+  }
+
+  void _goToToday() {
+    setState(() {
+      _currentWeekDates = Helpers.getCurrentWeekDates();
+      _selectedDate = DateTime.now();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<HabitProvider>(
@@ -55,6 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
         final todayHabits = habitProvider.getHabitsForDate(_selectedDate).where((h) => !h.isQuitHabit).toList();
         final quitHabits = habitProvider.quitHabits;
         final progress = habitProvider.getTodayProgress();
+        final weeklyAchievedDays = _computeWeeklyAchievedDays(habitProvider);
 
         // Check for newly unlocked achievements
         if (habitProvider.newlyUnlockedAchievements.isNotEmpty) {
@@ -83,24 +114,90 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 20),
-                    // Profile Header
+                    // Premium Profile Header with enhanced features
                     FadeInDown(
                       duration: const Duration(milliseconds: 500),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: ProfileHeader(
+                        child: PremiumProfileHeader(
                           user: user,
                           totalHabits: habitProvider.totalHabits,
-                          unlockedAchievements: user?.unlockedAchievements.length ?? 0,
+                          completedToday: habitProvider.getTodayCompletedCount(),
+                          totalToday: todayHabits.length,
                           currentStreak: habitProvider.currentMaxStreak,
-                          onTap: () => _showProfileDetails(context, habitProvider),
+                          longestStreak: habitProvider.longestStreak,
+                          levelProgress: habitProvider.levelProgress,
+                          onAvatarTap: () => _showProfileDetails(context, habitProvider),
+                          onStatsTap: () => _showLevelDetails(context, habitProvider),
+                          // New action row callbacks
+                          onAddHabit: () => _navigateToAddHabit(context),
+                          onLogToday: () => _showDayDetails(context, habitProvider),
+                          onInsights: () => _navigateToInsights(context),
+                          // Weekly mission data
+                          weeklyTargetDays: 5,
+                          weeklyAchievedDays: weeklyAchievedDays,
+                          weeklyRewardXP: 100,
                         ),
                       ),
                     ),
                     const SizedBox(height: 24),
-                    // Date strip
-                    _buildDateStrip(context),
+                    // Enhanced Smart Week Strip with navigation
+                    SmartWeekStrip(
+                      selectedDate: _selectedDate,
+                      onSelect: (date) {
+                        setState(() => _selectedDate = date);
+                        // Show day detail on long press or double tap - simulated via onSelect for now
+                      },
+                      weekDates: _currentWeekDates,
+                      completionByDate: _computeWeekCompletion(habitProvider),
+                      completionProgress: _computeWeekProgress(habitProvider),
+                      onPreviousWeek: _goToPreviousWeek,
+                      onNextWeek: _goToNextWeek,
+                      onTodayTap: _goToToday,
+                    ),
                     const SizedBox(height: 24),
+                    // NEW: Achievements Carousel
+                    FadeInUp(
+                      duration: const Duration(milliseconds: 500),
+                      delay: const Duration(milliseconds: 150),
+                      child: AchievementsCarousel(
+                        achievements: _buildAchievementsData(habitProvider),
+                        onAchievementTap: (achievement) {
+                          // Navigate to achievements screen or show details
+                          HapticFeedback.lightImpact();
+                        },
+                        onSeeAllTap: () {
+                          // Navigate to achievements screen
+                          HapticFeedback.lightImpact();
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    // NEW: Today Focus Panel (only shown if there are habits due)
+                    if (Helpers.isToday(_selectedDate) && todayHabits.isNotEmpty)
+                      FadeInUp(
+                        duration: const Duration(milliseconds: 500),
+                        delay: const Duration(milliseconds: 200),
+                        child: TodayFocusPanel(
+                          focusHabits: _buildFocusHabitsData(habitProvider, todayHabits),
+                          xpReward: 50,
+                          onCompleteAll: () => _completeAllHabits(context, habitProvider, todayHabits),
+                          onSnooze: () {
+                            HapticFeedback.lightImpact();
+                            Helpers.showSnackBar(context, 'Snooze feature coming soon!');
+                          },
+                          onReschedule: () {
+                            HapticFeedback.lightImpact();
+                            Helpers.showSnackBar(context, 'Reschedule feature coming soon!');
+                          },
+                          onHabitTap: (habit) => _navigateToEditHabit(context, habit),
+                          onHabitToggle: (habit) {
+                            habitProvider.toggleHabitCompletion(habit.id, date: _selectedDate);
+                          },
+                        ),
+                      ),
+                    if (Helpers.isToday(_selectedDate) && todayHabits.isNotEmpty)
+                      const SizedBox(height: 24),
                     // Stats row
                     _buildStatsRow(context, habitProvider, progress),
                     const SizedBox(height: 24),
@@ -207,72 +304,277 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildDateStrip(BuildContext context) {
-    final weekDates = Helpers.getCurrentWeekDates();
+  /// Computes completion state for each day in the current week
+  Map<String, DayCompletionState> _computeWeekCompletion(HabitProvider habitProvider) {
+    final result = <String, DayCompletionState>{};
     
-    return FadeInLeft(
-      duration: const Duration(milliseconds: 500),
-      delay: const Duration(milliseconds: 100),
-      child: SizedBox(
-        height: 80,
-        child: ListView.builder(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          itemCount: weekDates.length,
-          itemBuilder: (context, index) {
-            final date = weekDates[index];
-            final isSelected = Helpers.isSameDay(date, _selectedDate);
-            final isToday = Helpers.isToday(date);
-            
-            return GestureDetector(
-              onTap: () {
-                setState(() => _selectedDate = date);
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: 56,
-                margin: const EdgeInsets.symmetric(horizontal: 6),
-                decoration: BoxDecoration(
-                  gradient: isSelected ? AppColors.primaryGradient : null,
-                  color: isSelected ? null : Colors.transparent,
-                  borderRadius: BorderRadius.circular(16),
-                  border: isToday && !isSelected
-                      ? Border.all(
-                          color: AppColors.primaryPurple.withAlpha(76),
-                          width: 2,
-                        )
-                      : null,
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      AppConstants.daysOfWeek[index],
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isSelected
-                            ? Colors.white
-                            : Colors.white.withOpacity(0.6),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      date.day.toString(),
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: isSelected
-                            ? Colors.white
-                            : Colors.white.withOpacity(0.9),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        ),
+    for (final date in _currentWeekDates) {
+      final dateKey = Helpers.formatDateForStorage(date);
+      final habitsForDate = habitProvider.getHabitsForDate(date)
+          .where((h) => !h.isQuitHabit)
+          .toList();
+      
+      if (habitsForDate.isEmpty) {
+        result[dateKey] = DayCompletionState.none;
+        continue;
+      }
+      
+      final completedCount = habitsForDate.where((h) => h.isCompletedOn(dateKey)).length;
+      
+      if (completedCount == habitsForDate.length) {
+        result[dateKey] = DayCompletionState.complete;
+      } else if (completedCount > 0) {
+        result[dateKey] = DayCompletionState.partial;
+      } else {
+        // Check if day is in past and habits weren't completed
+        if (Helpers.isPast(date)) {
+          result[dateKey] = DayCompletionState.missed;
+        } else {
+          result[dateKey] = DayCompletionState.none;
+        }
+      }
+    }
+    
+    return result;
+  }
+
+  /// Computes completion progress (0.0 to 1.0) for each day in the week
+  Map<String, double> _computeWeekProgress(HabitProvider habitProvider) {
+    final result = <String, double>{};
+    
+    for (final date in _currentWeekDates) {
+      final dateKey = Helpers.formatDateForStorage(date);
+      final habitsForDate = habitProvider.getHabitsForDate(date)
+          .where((h) => !h.isQuitHabit)
+          .toList();
+      
+      if (habitsForDate.isEmpty) {
+        result[dateKey] = 0.0;
+        continue;
+      }
+      
+      final completedCount = habitsForDate.where((h) => h.isCompletedOn(dateKey)).length;
+      result[dateKey] = completedCount / habitsForDate.length;
+    }
+    
+    return result;
+  }
+
+  /// Computes weekly achieved days (days where all habits were completed)
+  int _computeWeeklyAchievedDays(HabitProvider habitProvider) {
+    int achievedDays = 0;
+    
+    for (final date in _currentWeekDates) {
+      final dateKey = Helpers.formatDateForStorage(date);
+      final habitsForDate = habitProvider.getHabitsForDate(date)
+          .where((h) => !h.isQuitHabit)
+          .toList();
+      
+      if (habitsForDate.isEmpty) continue;
+      
+      final completedCount = habitsForDate.where((h) => h.isCompletedOn(dateKey)).length;
+      if (completedCount == habitsForDate.length) {
+        achievedDays++;
+      }
+    }
+    
+    return achievedDays;
+  }
+
+  /// Build achievements data for the carousel
+  List<AchievementCardData> _buildAchievementsData(HabitProvider habitProvider) {
+    final unlockedAchievements = habitProvider.user?.unlockedAchievements ?? [];
+    final allAchievements = AchievementModel.allAchievements;
+    
+    // Get next 3 achievements to show (prioritize in-progress ones)
+    final achievementsToShow = <AchievementCardData>[];
+    
+    for (final achievement in allAchievements.take(5)) {
+      final isUnlocked = unlockedAchievements.contains(achievement.id);
+      double progress = 0.0;
+      String? nextUnlockHint;
+      
+      // Calculate progress based on achievement type
+      if (achievement.requirement != null) {
+        switch (achievement.category) {
+          case AchievementCategory.streaks:
+            progress = (habitProvider.currentMaxStreak / achievement.requirement!).clamp(0.0, 1.0);
+            if (!isUnlocked) {
+              final remaining = achievement.requirement! - habitProvider.currentMaxStreak;
+              nextUnlockHint = '$remaining more days';
+            }
+            break;
+          case AchievementCategory.completions:
+            progress = (habitProvider.totalCompletions / achievement.requirement!).clamp(0.0, 1.0);
+            if (!isUnlocked) {
+              final remaining = achievement.requirement! - habitProvider.totalCompletions;
+              nextUnlockHint = '$remaining more completions';
+            }
+            break;
+          case AchievementCategory.habits:
+            progress = (habitProvider.totalHabits / achievement.requirement!).clamp(0.0, 1.0);
+            if (!isUnlocked) {
+              final remaining = achievement.requirement! - habitProvider.totalHabits;
+              nextUnlockHint = 'Create $remaining more habits';
+            }
+            break;
+          case AchievementCategory.milestones:
+            if (achievement.id.startsWith('level_')) {
+              progress = (habitProvider.level / achievement.requirement!).clamp(0.0, 1.0);
+              if (!isUnlocked) {
+                final remaining = achievement.requirement! - habitProvider.level;
+                nextUnlockHint = '$remaining levels to go';
+              }
+            }
+            break;
+        }
+      } else {
+        // For milestones without requirements (like perfect_day)
+        if (achievement.id == 'perfect_day') {
+          final todayProgress = habitProvider.getTodayProgress();
+          progress = todayProgress;
+          if (!isUnlocked && progress < 1.0) {
+            final remaining = habitProvider.todayHabits.length - habitProvider.getTodayCompletedCount();
+            nextUnlockHint = 'Complete $remaining more habits today';
+          }
+        }
+      }
+      
+      achievementsToShow.add(AchievementCardData(
+        id: achievement.id,
+        name: achievement.name,
+        icon: achievement.icon,
+        gradientColors: achievement.gradientColors,
+        progress: isUnlocked ? 1.0 : progress,
+        isUnlocked: isUnlocked,
+        nextUnlockHint: nextUnlockHint,
+        xpReward: achievement.xpReward,
+      ));
+      
+      if (achievementsToShow.length >= 3) break;
+    }
+    
+    return achievementsToShow;
+  }
+
+  /// Build focus habits data for the Today Focus Panel
+  List<FocusHabitData> _buildFocusHabitsData(HabitProvider habitProvider, List<HabitModel> habits) {
+    final dateKey = Helpers.formatDateForStorage(_selectedDate);
+    final now = DateTime.now();
+    
+    return habits.map((habit) {
+      final isCompleted = habit.isCompletedOn(dateKey);
+      
+      // Determine urgency (habits with reminders that are overdue)
+      bool isUrgent = false;
+      String? dueTime;
+      
+      // Habits are only urgent for today's view
+      if (Helpers.isToday(_selectedDate) && habit.reminderTime != null && !isCompleted) {
+        try {
+          final parts = habit.reminderTime!.split(':');
+          final reminderHour = int.parse(parts[0]);
+          final reminderMinute = int.parse(parts[1]);
+          dueTime = habit.reminderTime;
+          
+          // If current time is past reminder time, it's urgent
+          if (now.hour > reminderHour || 
+              (now.hour == reminderHour && now.minute > reminderMinute)) {
+            isUrgent = true;
+          }
+        } catch (e) {
+          // Invalid time format, ignore
+        }
+      }
+      
+      return FocusHabitData(
+        habit: habit,
+        isCompleted: isCompleted,
+        isUrgent: isUrgent,
+        dueTime: dueTime,
+      );
+    }).toList();
+  }
+
+  /// Complete all habits for the day
+  void _completeAllHabits(BuildContext context, HabitProvider habitProvider, List<HabitModel> habits) {
+    HapticFeedback.heavyImpact();
+    
+    for (final habit in habits) {
+      final dateKey = Helpers.formatDateForStorage(_selectedDate);
+      if (!habit.isCompletedOn(dateKey)) {
+        habitProvider.toggleHabitCompletion(habit.id, date: _selectedDate);
+      }
+    }
+    
+    _showConfetti();
+    Helpers.showSnackBar(context, 'All habits completed! 🎉');
+  }
+
+  /// Navigate to add habit screen
+  void _navigateToAddHabit(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AddHabitScreen(),
       ),
+    );
+  }
+
+  /// Navigate to insights/statistics screen
+  void _navigateToInsights(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const StatisticsScreen(),
+      ),
+    );
+  }
+
+  /// Show day details bottom sheet
+  void _showDayDetails(BuildContext context, HabitProvider habitProvider) {
+    final habits = habitProvider.getHabitsForDate(_selectedDate)
+        .where((h) => !h.isQuitHabit)
+        .toList();
+    final dateKey = Helpers.formatDateForStorage(_selectedDate);
+    
+    final completionStates = <String, bool>{};
+    for (final habit in habits) {
+      completionStates[habit.id] = habit.isCompletedOn(dateKey);
+    }
+    
+    DayDetailBottomSheet.show(
+      context: context,
+      date: _selectedDate,
+      habits: habits,
+      completionStates: completionStates,
+      currentStreak: habitProvider.currentMaxStreak,
+      onToggleCompletion: (habit, completed) {
+        habitProvider.toggleHabitCompletion(habit.id, date: _selectedDate);
+        Navigator.pop(context);
+        _showDayDetails(context, habitProvider); // Refresh
+      },
+      onSkip: (habit) {
+        Navigator.pop(context);
+        Helpers.showSnackBar(context, 'Skip feature coming soon!');
+      },
+      onSnooze: (habit) {
+        Navigator.pop(context);
+        Helpers.showSnackBar(context, 'Snooze feature coming soon!');
+      },
+      onReschedule: (habit) {
+        Navigator.pop(context);
+        Helpers.showSnackBar(context, 'Reschedule feature coming soon!');
+      },
+      onCompleteAll: () {
+        for (final habit in habits) {
+          if (!completionStates[habit.id]!) {
+            habitProvider.toggleHabitCompletion(habit.id, date: _selectedDate);
+          }
+        }
+        Navigator.pop(context);
+        _showConfetti();
+      },
     );
   }
 
