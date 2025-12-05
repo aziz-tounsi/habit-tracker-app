@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:iconsax/iconsax.dart';
-import 'dart:math' as math;
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/premium_icons.dart';
 import '../../../data/models/achievement_model.dart';
@@ -26,6 +25,7 @@ class _AchievementsScreenState extends State<AchievementsScreen>
   final ScrollController _scrollController = ScrollController();
   double _scrollProgress = 0.0;
   late AnimationController _backgroundController;
+  late Animation<double> _pulseAnimation;
 
   @override
   void initState() {
@@ -34,7 +34,11 @@ class _AchievementsScreenState extends State<AchievementsScreen>
     _backgroundController = AnimationController(
       duration: const Duration(seconds: 3),
       vsync: this,
-    )..repeat();
+    )..repeat(reverse: true);
+    
+    _pulseAnimation = Tween<double>(begin: 0.15, end: 0.20).animate(
+      CurvedAnimation(parent: _backgroundController, curve: Curves.easeInOut),
+    );
   }
 
   @override
@@ -287,7 +291,7 @@ class _AchievementsScreenState extends State<AchievementsScreen>
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        stone.primaryColor.withOpacity(0.15 + 0.05 * math.sin(_backgroundController.value * 2 * math.pi)),
+                        stone.primaryColor.withOpacity(_pulseAnimation.value),
                         stone.secondaryColor.withOpacity(0.1),
                         Colors.black.withOpacity(0.5),
                       ],

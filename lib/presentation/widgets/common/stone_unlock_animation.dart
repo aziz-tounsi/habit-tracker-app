@@ -478,6 +478,9 @@ class _Particle {
   final double size;
   final Color color;
   final double delay;
+  // Pre-calculated trigonometric values for performance
+  final double cosAngle;
+  final double sinAngle;
 
   _Particle({
     required this.angle,
@@ -485,7 +488,8 @@ class _Particle {
     required this.size,
     required this.color,
     required this.delay,
-  });
+  }) : cosAngle = math.cos(angle),
+       sinAngle = math.sin(angle);
 }
 
 class _MagicRune {
@@ -523,12 +527,21 @@ class _EnergyParticlePainter extends CustomPainter {
       final adjustedProgress = ((progress - particle.delay) / (1 - particle.delay)).clamp(0.0, 1.0);
       
       // Particles start from outside and move toward center
-      final startRadius = 120.0;
-      final endRadius = 10.0;
+      const startRadius = 120.0;
+      const endRadius = 10.0;
       final currentRadius = startRadius - (startRadius - endRadius) * gatherProgress;
       
-      final x = center.dx + math.cos(particle.angle + adjustedProgress * 2) * currentRadius;
-      final y = center.dy + math.sin(particle.angle + adjustedProgress * 2) * currentRadius;
+      // Use small rotation offset based on progress, using pre-cached cos/sin values
+      final rotationOffset = adjustedProgress * 2;
+      final cosRotation = math.cos(rotationOffset);
+      final sinRotation = math.sin(rotationOffset);
+      
+      // Apply rotation matrix to the pre-cached direction
+      final rotatedCos = particle.cosAngle * cosRotation - particle.sinAngle * sinRotation;
+      final rotatedSin = particle.sinAngle * cosRotation + particle.cosAngle * sinRotation;
+      
+      final x = center.dx + rotatedCos * currentRadius;
+      final y = center.dy + rotatedSin * currentRadius;
       
       final paint = Paint()
         ..color = particle.color.withOpacity(0.8 * gatherProgress)
@@ -560,12 +573,12 @@ class _ExplodingParticlePainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     
     for (final particle in particles) {
-      // Particles explode outward
+      // Particles explode outward - use pre-cached values
       final distance = particle.speed * progress;
       final fadeOut = (1 - progress).clamp(0.0, 1.0);
       
-      final x = center.dx + math.cos(particle.angle) * distance;
-      final y = center.dy + math.sin(particle.angle) * distance;
+      final x = center.dx + particle.cosAngle * distance;
+      final y = center.dy + particle.sinAngle * distance;
       
       final paint = Paint()
         ..color = particle.color.withOpacity(fadeOut * 0.8)

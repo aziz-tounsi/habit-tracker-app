@@ -2,6 +2,15 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import '../../../data/models/stone_model.dart';
 
+/// Grayscale color filter matrix for locked stones
+/// Uses luminance coefficients (Rec. 709) with reduced opacity
+const List<double> _grayscaleLockedMatrix = <double>[
+  0.2126, 0.7152, 0.0722, 0, 0, // Red channel
+  0.2126, 0.7152, 0.0722, 0, 0, // Green channel
+  0.2126, 0.7152, 0.0722, 0, 0, // Blue channel
+  0, 0, 0, 0.6, 0,              // Alpha channel (60% opacity)
+];
+
 /// 3D Crystal Stone Widget with PNG assets and magical effects
 class CrystalStone extends StatefulWidget {
   final String stoneType;
@@ -161,12 +170,7 @@ class _CrystalStoneState extends State<CrystalStone>
     // Apply grayscale and dark overlay for locked stones
     if (widget.isLocked) {
       stoneImage = ColorFiltered(
-        colorFilter: const ColorFilter.matrix(<double>[
-          0.2126, 0.7152, 0.0722, 0, 0,
-          0.2126, 0.7152, 0.0722, 0, 0,
-          0.2126, 0.7152, 0.0722, 0, 0,
-          0, 0, 0, 0.6, 0,
-        ]),
+        colorFilter: const ColorFilter.matrix(_grayscaleLockedMatrix),
         child: stoneImage,
       );
     }
