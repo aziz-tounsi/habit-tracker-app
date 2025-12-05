@@ -695,28 +695,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _navigateToCalendar(BuildContext context) {
+    // Navigate to calendar - it's also accessible from bottom navigation
+    // CalendarScreen has its own header
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => Scaffold(
-          backgroundColor: Colors.transparent,
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
-              onPressed: () => Navigator.pop(context),
-            ),
-            title: const Text(
-              'Calendar',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          body: const CalendarScreen(),
-        ),
+        builder: (context) => const CalendarScreen(),
       ),
     );
   }
