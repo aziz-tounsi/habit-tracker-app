@@ -11,7 +11,6 @@ import 'presentation/screens/home/home_screen.dart';
 import 'presentation/screens/statistics/statistics_screen.dart';
 import 'presentation/screens/achievements/achievements_screen.dart';
 import 'presentation/screens/profile/profile_screen.dart';
-import 'presentation/screens/settings/settings_screen.dart';
 import 'presentation/screens/onboarding/onboarding_screen.dart';
 import 'presentation/screens/add_habit/add_habit_screen.dart';
 
