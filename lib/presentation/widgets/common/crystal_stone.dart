@@ -11,7 +11,14 @@ const List<double> _grayscaleLockedMatrix = <double>[
   0, 0, 0, 0.6, 0,              // Alpha channel (60% opacity)
 ];
 
+/// Cached grayscale ColorFilter to avoid recreating on each build
+const ColorFilter _grayscaleColorFilter = ColorFilter.matrix(_grayscaleLockedMatrix);
+
 /// 3D Crystal Stone Widget with PNG assets and magical effects
+/// 
+/// Performance note: Set `animate: false` (the default) for grid displays
+/// to avoid creating animation controllers for each stone. Only enable
+/// animation for featured/modal displays where a single stone is highlighted.
 class CrystalStone extends StatefulWidget {
   final String stoneType;
   final double size;
@@ -25,7 +32,7 @@ class CrystalStone extends StatefulWidget {
     this.size = 80,
     this.isLocked = false,
     this.showGlow = true,
-    this.animate = true,
+    this.animate = false, // Default to false for performance
   });
 
   @override
@@ -34,59 +41,71 @@ class CrystalStone extends StatefulWidget {
 
 class _CrystalStoneState extends State<CrystalStone>
     with TickerProviderStateMixin {
-  late AnimationController _floatController;
-  late AnimationController _glowController;
-  late Animation<double> _floatAnimation;
-  late Animation<double> _glowAnimation;
+  AnimationController? _floatController;
+  AnimationController? _glowController;
+  Animation<double>? _floatAnimation;
+  Animation<double>? _glowAnimation;
+
+  bool get _shouldAnimate => widget.animate && !widget.isLocked;
 
   @override
   void initState() {
     super.initState();
-    
-    // Floating animation
-    _floatController = AnimationController(
-      duration: const Duration(milliseconds: 2000),
-      vsync: this,
-    );
-    _floatAnimation = Tween<double>(begin: -3, end: 3).animate(
-      CurvedAnimation(parent: _floatController, curve: Curves.easeInOut),
-    );
-    
-    // Glow pulsing animation
-    _glowController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    );
-    _glowAnimation = Tween<double>(begin: 0.4, end: 0.8).animate(
-      CurvedAnimation(parent: _glowController, curve: Curves.easeInOut),
-    );
-    
-    if (widget.animate && !widget.isLocked) {
-      _floatController.repeat(reverse: true);
-      _glowController.repeat(reverse: true);
+    _setupAnimationsIfNeeded();
+  }
+
+  void _setupAnimationsIfNeeded() {
+    if (_shouldAnimate) {
+      // Floating animation
+      _floatController = AnimationController(
+        duration: const Duration(milliseconds: 2000),
+        vsync: this,
+      );
+      _floatAnimation = Tween<double>(begin: -3, end: 3).animate(
+        CurvedAnimation(parent: _floatController!, curve: Curves.easeInOut),
+      );
+      
+      // Glow pulsing animation
+      _glowController = AnimationController(
+        duration: const Duration(milliseconds: 1500),
+        vsync: this,
+      );
+      _glowAnimation = Tween<double>(begin: 0.4, end: 0.8).animate(
+        CurvedAnimation(parent: _glowController!, curve: Curves.easeInOut),
+      );
+      
+      _floatController!.repeat(reverse: true);
+      _glowController!.repeat(reverse: true);
     }
+  }
+
+  void _disposeAnimations() {
+    _floatController?.dispose();
+    _glowController?.dispose();
+    _floatController = null;
+    _glowController = null;
+    _floatAnimation = null;
+    _glowAnimation = null;
   }
 
   @override
   void didUpdateWidget(CrystalStone oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.animate && !widget.isLocked) {
-      if (!_floatController.isAnimating) {
-        _floatController.repeat(reverse: true);
-      }
-      if (!_glowController.isAnimating) {
-        _glowController.repeat(reverse: true);
-      }
-    } else {
-      _floatController.stop();
-      _glowController.stop();
+    final wasAnimating = oldWidget.animate && !oldWidget.isLocked;
+    final shouldNowAnimate = _shouldAnimate;
+    
+    if (wasAnimating && !shouldNowAnimate) {
+      // Stop and dispose animations
+      _disposeAnimations();
+    } else if (!wasAnimating && shouldNowAnimate) {
+      // Start animations
+      _setupAnimationsIfNeeded();
     }
   }
 
   @override
   void dispose() {
-    _floatController.dispose();
-    _glowController.dispose();
+    _disposeAnimations();
     super.dispose();
   }
 
@@ -94,36 +113,48 @@ class _CrystalStoneState extends State<CrystalStone>
   Widget build(BuildContext context) {
     final stone = StoneModel.getById(widget.stoneType);
     
-    return SizedBox(
-      width: widget.size * 1.4,
-      height: widget.size * 1.4,
-      child: AnimatedBuilder(
-        animation: Listenable.merge([_floatAnimation, _glowAnimation]),
-        builder: (context, child) {
-          return Stack(
-            alignment: Alignment.center,
-            children: [
-              // Animated magical glow background (unlocked only)
-              if (!widget.isLocked && widget.showGlow && stone != null)
-                _buildMagicalGlow(stone),
-              
-              // Stone with floating effect
-              Transform.translate(
-                offset: Offset(0, widget.isLocked ? 0 : _floatAnimation.value),
-                child: _buildStoneImage(stone),
-              ),
-              
-              // Lock overlay for locked stones
-              if (widget.isLocked)
-                _buildLockOverlay(),
-            ],
-          );
-        },
+    // Wrap in RepaintBoundary to isolate repaints
+    return RepaintBoundary(
+      child: SizedBox(
+        width: widget.size * 1.4,
+        height: widget.size * 1.4,
+        child: _shouldAnimate && _floatAnimation != null && _glowAnimation != null
+            ? AnimatedBuilder(
+                animation: Listenable.merge([_floatAnimation!, _glowAnimation!]),
+                builder: (context, child) {
+                  return _buildContent(stone);
+                },
+              )
+            : _buildContent(stone),
       ),
     );
   }
 
-  Widget _buildMagicalGlow(StoneModel stone) {
+  Widget _buildContent(StoneModel? stone) {
+    final floatValue = _floatAnimation?.value ?? 0.0;
+    final glowValue = _glowAnimation?.value ?? 0.6;
+    
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        // Animated magical glow background (unlocked only)
+        if (!widget.isLocked && widget.showGlow && stone != null)
+          _buildMagicalGlow(stone, glowValue),
+        
+        // Stone with floating effect
+        Transform.translate(
+          offset: Offset(0, widget.isLocked ? 0 : floatValue),
+          child: _buildStoneImage(stone),
+        ),
+        
+        // Lock overlay for locked stones
+        if (widget.isLocked)
+          _buildLockOverlay(),
+      ],
+    );
+  }
+
+  Widget _buildMagicalGlow(StoneModel stone, double glowValue) {
     return Container(
       width: widget.size * 1.3,
       height: widget.size * 1.3,
@@ -131,17 +162,17 @@ class _CrystalStoneState extends State<CrystalStone>
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: stone.glowColor.withOpacity(_glowAnimation.value * 0.6),
+            color: stone.glowColor.withOpacity(glowValue * 0.6),
             blurRadius: 25,
             spreadRadius: 8,
           ),
           BoxShadow(
-            color: stone.primaryColor.withOpacity(_glowAnimation.value * 0.4),
+            color: stone.primaryColor.withOpacity(glowValue * 0.4),
             blurRadius: 40,
             spreadRadius: 3,
           ),
           BoxShadow(
-            color: stone.secondaryColor.withOpacity(_glowAnimation.value * 0.3),
+            color: stone.secondaryColor.withOpacity(glowValue * 0.3),
             blurRadius: 50,
             spreadRadius: 1,
           ),
@@ -170,7 +201,7 @@ class _CrystalStoneState extends State<CrystalStone>
     // Apply grayscale and dark overlay for locked stones
     if (widget.isLocked) {
       stoneImage = ColorFiltered(
-        colorFilter: const ColorFilter.matrix(_grayscaleLockedMatrix),
+        colorFilter: _grayscaleColorFilter,
         child: stoneImage,
       );
     }

@@ -20,32 +20,20 @@ class AchievementsScreen extends StatefulWidget {
   State<AchievementsScreen> createState() => _AchievementsScreenState();
 }
 
-class _AchievementsScreenState extends State<AchievementsScreen>
-    with SingleTickerProviderStateMixin {
+class _AchievementsScreenState extends State<AchievementsScreen> {
   final ScrollController _scrollController = ScrollController();
   double _scrollProgress = 0.0;
-  late AnimationController _backgroundController;
-  late Animation<double> _pulseAnimation;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    _backgroundController = AnimationController(
-      duration: const Duration(seconds: 3),
-      vsync: this,
-    )..repeat(reverse: true);
-    
-    _pulseAnimation = Tween<double>(begin: 0.15, end: 0.20).animate(
-      CurvedAnimation(parent: _backgroundController, curve: Curves.easeInOut),
-    );
   }
 
   @override
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
-    _backgroundController.dispose();
     super.dispose();
   }
 
@@ -274,96 +262,95 @@ class _AchievementsScreenState extends State<AchievementsScreen>
     StoneModel stone,
     bool isUnlocked,
   ) {
+    // Static opacity value (no animation for grid performance)
+    const staticOpacity = 0.17;
+    
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
         _showStoneDetails(context, stone, isUnlocked);
       },
-      child: AnimatedBuilder(
-        animation: _backgroundController,
-        builder: (context, child) {
-          return Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              gradient: isUnlocked
-                  ? LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        stone.primaryColor.withOpacity(_pulseAnimation.value),
-                        stone.secondaryColor.withOpacity(0.1),
-                        Colors.black.withOpacity(0.5),
-                      ],
-                    )
-                  : null,
-              color: isUnlocked ? null : Colors.black.withOpacity(0.5),
-              border: Border.all(
-                color: isUnlocked
-                    ? stone.glowColor.withOpacity(0.3)
-                    : Colors.white.withOpacity(0.1),
-                width: 1,
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: isUnlocked
+              ? LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    stone.primaryColor.withOpacity(staticOpacity),
+                    stone.secondaryColor.withOpacity(0.1),
+                    Colors.black.withOpacity(0.5),
+                  ],
+                )
+              : null,
+          color: isUnlocked ? null : Colors.black.withOpacity(0.5),
+          border: Border.all(
+            color: isUnlocked
+                ? stone.glowColor.withOpacity(0.3)
+                : Colors.white.withOpacity(0.1),
+            width: 1,
+          ),
+          boxShadow: isUnlocked
+              ? [
+                  BoxShadow(
+                    color: stone.glowColor.withOpacity(0.2),
+                    blurRadius: 15,
+                    spreadRadius: 1,
+                  ),
+                ]
+              : null,
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Grid stones use static (no animation) for performance
+            CrystalStone(
+              stoneType: stone.id,
+              size: 48,
+              isLocked: !isUnlocked,
+              showGlow: isUnlocked,
+              animate: false, // No animation for grid stones
+            ),
+            const SizedBox(height: 6),
+            Flexible(
+              child: Text(
+                stone.name,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: isUnlocked ? Colors.white : Colors.white.withOpacity(0.4),
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
               ),
-              boxShadow: isUnlocked
-                  ? [
-                      BoxShadow(
-                        color: stone.glowColor.withOpacity(0.2),
-                        blurRadius: 15,
-                        spreadRadius: 1,
-                      ),
-                    ]
-                  : null,
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CrystalStone(
-                  stoneType: stone.id,
-                  size: 48,
-                  isLocked: !isUnlocked,
-                  showGlow: isUnlocked,
-                  animate: isUnlocked,
+            const SizedBox(height: 4),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: _getRarityColor(stone.rarity).withOpacity(isUnlocked ? 0.2 : 0.1),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: _getRarityColor(stone.rarity).withOpacity(isUnlocked ? 0.4 : 0.2),
+                  width: 1,
                 ),
-                const SizedBox(height: 6),
-                Flexible(
-                  child: Text(
-                    stone.name,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: isUnlocked ? Colors.white : Colors.white.withOpacity(0.4),
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 2,
-                  ),
+              ),
+              child: Text(
+                _getRarityName(stone.rarity),
+                style: TextStyle(
+                  fontSize: 7,
+                  fontWeight: FontWeight.w600,
+                  color: _getRarityColor(stone.rarity).withOpacity(isUnlocked ? 1.0 : 0.5),
+                  letterSpacing: 0.5,
                 ),
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: _getRarityColor(stone.rarity).withOpacity(isUnlocked ? 0.2 : 0.1),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(
-                      color: _getRarityColor(stone.rarity).withOpacity(isUnlocked ? 0.4 : 0.2),
-                      width: 1,
-                    ),
-                  ),
-                  child: Text(
-                    _getRarityName(stone.rarity),
-                    style: TextStyle(
-                      fontSize: 7,
-                      fontWeight: FontWeight.w600,
-                      color: _getRarityColor(stone.rarity).withOpacity(isUnlocked ? 1.0 : 0.5),
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
-          );
-        },
+          ],
+        ),
       ),
     );
   }
@@ -502,6 +489,7 @@ class _StoneDetailsModalState extends State<_StoneDetailsModal>
                   size: 120,
                   isLocked: !widget.isUnlocked,
                   showGlow: widget.isUnlocked,
+                  animate: widget.isUnlocked, // Animate in modal for featured stone
                 ),
               );
             },

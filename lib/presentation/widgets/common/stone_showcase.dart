@@ -31,7 +31,7 @@ class _StoneShowcaseState extends State<StoneShowcase>
     super.initState();
     
     _rotationController = AnimationController(
-      duration: const Duration(seconds: 20),
+      duration: const Duration(seconds: 60), // Slowed down from 20s for performance
       vsync: this,
     )..repeat();
     
@@ -173,16 +173,18 @@ class _StoneShowcaseState extends State<StoneShowcase>
   }
 
   Widget _buildStarBackground() {
-    return AnimatedBuilder(
-      animation: _rotationController,
-      builder: (context, child) {
-        return CustomPaint(
-          painter: _StarBackgroundPainter(
-            rotation: _rotationController.value * 2 * math.pi,
-          ),
-          size: Size.infinite,
-        );
-      },
+    return RepaintBoundary(
+      child: AnimatedBuilder(
+        animation: _rotationController,
+        builder: (context, child) {
+          return CustomPaint(
+            painter: _StarBackgroundPainter(
+              rotation: _rotationController.value * 2 * math.pi,
+            ),
+            size: Size.infinite,
+          );
+        },
+      ),
     );
   }
 
@@ -401,8 +403,8 @@ class _StarBackgroundPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()..style = PaintingStyle.fill;
     
-    // Draw static stars
-    for (int i = 0; i < 30; i++) {
+    // Draw static stars (reduced from 30 to 15 for performance)
+    for (int i = 0; i < 15; i++) {
       final x = _random.nextDouble() * size.width;
       final y = _random.nextDouble() * size.height;
       final starSize = 0.5 + _random.nextDouble() * 1.5;

@@ -365,6 +365,7 @@ class _StoneUnlockAnimationState extends State<StoneUnlockAnimation>
             size: 120,
             isLocked: false,
             showGlow: true,
+            animate: true, // Enable animation for unlock celebration
           ),
         ),
       ),
