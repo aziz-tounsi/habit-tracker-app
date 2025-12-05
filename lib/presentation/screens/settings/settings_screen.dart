@@ -873,7 +873,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onPressed: () async {
               Navigator.pop(context);
               final authProvider = context.read<AuthProvider>();
+              final habitProvider = context.read<HabitProvider>();
               await authProvider.signOut();
+              await habitProvider.clearAllData();
+              if (context.mounted) {
+                Navigator.of(context).popUntil((route) => route.isFirst);
+              }
             },
             style: TextButton.styleFrom(foregroundColor: AppColors.primaryPurple),
             child: const Text('Sign Out'),
