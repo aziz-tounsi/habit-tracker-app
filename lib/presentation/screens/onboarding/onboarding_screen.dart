@@ -152,86 +152,84 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => OnboardingProvider(),
-      child: Scaffold(
-        body: GalaxyBackground(
-          child: SafeArea(
-            child: Column(
-              children: [
-                // Header with back button
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      if (_currentPage > 0)
-                        IconButton(
-                          onPressed: _previousPage,
-                          icon: const Icon(Icons.arrow_back, color: Colors.white),
-                        )
-                      else
-                        const SizedBox(width: 48),
-                      Text(
-                        'Step ${_currentPage + 1} of 7',
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 14,
-                        ),
-                      ),
+    // Use the global OnboardingProvider from main.dart instead of creating a local one
+    return Scaffold(
+      body: GalaxyBackground(
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Header with back button
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    if (_currentPage > 0)
+                      IconButton(
+                        onPressed: _previousPage,
+                        icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      )
+                    else
                       const SizedBox(width: 48),
-                    ],
-                  ),
+                    Text(
+                      'Step ${_currentPage + 1} of 7',
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(width: 48),
+                  ],
                 ),
-                // Page content
-                Expanded(
-                  child: PageView(
-                    controller: _pageController,
-                    physics: const NeverScrollableScrollPhysics(),
-                    onPageChanged: (index) {
-                      setState(() => _currentPage = index);
-                      if (index == 6) {
-                        _confettiController.play();
-                      }
-                    },
-                    children: [
-                      _buildWelcomePage(),
-                      _buildNameAvatarPage(),
-                      _buildGoalsPage(),
-                      _buildGoodHabitsPage(),
-                      _buildBadHabitsPage(),
-                      _buildSchedulePage(),
-                      _buildCompletionPage(),
-                    ],
-                  ),
+              ),
+              // Page content
+              Expanded(
+                child: PageView(
+                  controller: _pageController,
+                  physics: const NeverScrollableScrollPhysics(),
+                  onPageChanged: (index) {
+                    setState(() => _currentPage = index);
+                    if (index == 6) {
+                      _confettiController.play();
+                    }
+                  },
+                  children: [
+                    _buildWelcomePage(),
+                    _buildNameAvatarPage(),
+                    _buildGoalsPage(),
+                    _buildGoodHabitsPage(),
+                    _buildBadHabitsPage(),
+                    _buildSchedulePage(),
+                    _buildCompletionPage(),
+                  ],
                 ),
-                // Page indicators
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 20),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(
-                      7,
-                      (index) => AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        width: _currentPage == index ? 24 : 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(4),
-                          gradient: _currentPage == index
-                              ? AppColors.primaryGradient
-                              : null,
-                          color: _currentPage == index
-                              ? null
-                              : Colors.white24,
-                        ),
+              ),
+              // Page indicators
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(
+                    7,
+                    (index) => AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      width: _currentPage == index ? 24 : 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4),
+                        gradient: _currentPage == index
+                            ? AppColors.primaryGradient
+                            : null,
+                        color: _currentPage == index
+                            ? null
+                            : Colors.white24,
                       ),
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
