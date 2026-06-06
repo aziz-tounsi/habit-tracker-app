@@ -306,12 +306,14 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
               option['name'] as String,
           onSelected: (Map<String, dynamic> selection) {
             _nameController.text = selection['name'] as String;
+            // Auto-populate icon
+            final icon = selection['icon'] as IconData;
+            final iconIndex = AppConstants.habitIcons.indexOf(icon);
             // Auto-populate category
-            if (selection['category'] != null) {
-              setState(() {
-                _selectedCategory = selection['category'] as String;
-              });
-            }
+            setState(() {
+              _selectedIconIndex = iconIndex >= 0 ? iconIndex : 0;
+              _selectedCategory = selection['category'] as String? ?? _selectedCategory;
+            });
             // Check if this is a bad habit with a smart config
             if (_isQuitHabit && selection['configType'] != null) {
               final configType = selection['configType'] as String;

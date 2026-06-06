@@ -139,6 +139,23 @@ class HabitRepository {
     return getAllHabits().map((h) => h.currentStreak).reduce((a, b) => a > b ? a : b);
   }
 
+  Map<String, int> getCompletionsForDays(int days) {
+    final completions = <String, int>{};
+    final now = DateTime.now();
+
+    for (int i = days - 1; i >= 0; i--) {
+      final date = now.subtract(Duration(days: i));
+      final dateKey = Helpers.formatDateForStorage(date);
+      int count = 0;
+      for (var habit in getAllHabits()) {
+        if (habit.isCompletedOn(dateKey)) count++;
+      }
+      completions[dateKey] = count;
+    }
+
+    return completions;
+  }
+
   Map<String, int> getWeeklyCompletions() {
     final weekDates = Helpers.getCurrentWeekDates();
     final completions = <String, int>{};
@@ -290,6 +307,29 @@ class HabitRepository {
       completions[dateKey] = count;
     }
     
+    return completions;
+  }
+
+  Map<String, int> getLifetimeMonthlyCompletions() {
+    final completions = <String, int>{};
+    final now = DateTime.now();
+
+    for (int i = 11; i >= 0; i--) {
+      final month = DateTime(now.year, now.month - i, 1);
+      final monthKey = '${month.year}-${month.month.toString().padLeft(2, '0')}';
+      int count = 0;
+      final daysInMonth = DateTime(month.year, month.month + 1, 0).day;
+      for (int day = 1; day <= daysInMonth; day++) {
+        final date = DateTime(month.year, month.month, day);
+        if (date.isAfter(now)) break;
+        final dateKey = Helpers.formatDateForStorage(date);
+        for (var habit in getAllHabits()) {
+          if (habit.isCompletedOn(dateKey)) count++;
+        }
+      }
+      completions[monthKey] = count;
+    }
+
     return completions;
   }
 

@@ -7,8 +7,9 @@ import 'dart:math' as math;
 class AvatarSystem {
   // DiceBear API configuration
   static const String diceBearApiVersion = '7.x';
-  static const String diceBearBaseUrl = 'https://api.dicebear.com/$diceBearApiVersion';
-  
+  static const String diceBearBaseUrl =
+      'https://api.dicebear.com/$diceBearApiVersion';
+
   // Available DiceBear styles (premium, non-emoji)
   static const List<String> diceBearStyles = [
     'adventurer',
@@ -146,7 +147,8 @@ class GradientAvatarBuilder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final gradient = gradientColors ?? AvatarSystem.generateGradientFromSeed(seed);
+    final gradient =
+        gradientColors ?? AvatarSystem.generateGradientFromSeed(seed);
     final avatarIcon = icon ?? AvatarSystem.generateIconFromSeed(seed);
 
     return Container(
@@ -295,7 +297,7 @@ class PremiumAvatars {
       icon: Iconsax.cup,
       name: 'Crimson Cup',
     ),
-    
+
     // Icon-based avatars with gradients
     AvatarOption.icon(
       id: 'icon_user_purple',
@@ -336,5 +338,46 @@ class PremiumAvatars {
     final hash = seed.hashCode.abs();
     final index = hash % options.length;
     return options[index];
+  }
+}
+
+/// Image-based avatar system for the 9 custom avatar images
+class ImageAvatars {
+  // List of actual avatar image file names
+  static const List<String> _avatarFileNames = [
+    '1d8gtw1d8gtw1d8g',
+    '3wzusr3wzusr3wzu',
+    '6yaeg6yaeg6yaeg6',
+    '73wn1j73wn1j73wn',
+    '7ro6yx7ro6yx7ro6',
+    'he1ml7he1ml7he1m',
+    'kzsyvkzsyvkzsyvk',
+    'v27t6wv27t6wv27t',
+    'v4c5stv4c5stv4c5',
+  ];
+
+  /// Get the asset path for an avatar by its ID (e.g., 'avatar_0')
+  static String? getAvatarPath(String avatarId) {
+    if (!avatarId.startsWith('avatar_')) return null;
+
+    final indexStr = avatarId.replaceFirst('avatar_', '');
+    final index = int.tryParse(indexStr);
+
+    if (index == null || index < 0 || index >= _avatarFileNames.length) {
+      return null;
+    }
+
+    return 'assets/avatars/Gemini_Generated_Image_${_avatarFileNames[index]}.png';
+  }
+
+  /// Check if an avatar ID is an image avatar
+  static bool isImageAvatar(String avatarId) {
+    return avatarId.startsWith('avatar_');
+  }
+
+  /// Get avatar path by index directly
+  static String getAvatarPathByIndex(int index) {
+    final safeIndex = index.clamp(0, _avatarFileNames.length - 1);
+    return 'assets/avatars/Gemini_Generated_Image_${_avatarFileNames[safeIndex]}.png';
   }
 }

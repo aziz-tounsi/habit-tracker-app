@@ -16,6 +16,8 @@ import '../../widgets/common/smart_week_strip.dart';
 import '../../widgets/common/motivational_quote_card.dart';
 import '../../widgets/common/galaxy_background.dart';
 import '../../widgets/common/achievements_carousel.dart';
+import '../../widgets/common/stone_unlock_animation.dart';
+import '../../../data/models/stone_model.dart';
 import '../../widgets/common/day_detail_bottom_sheet.dart';
 import '../../widgets/habit/habit_list.dart';
 import '../../widgets/quit/quit_habit_card.dart';
@@ -87,10 +89,14 @@ class _HomeScreenState extends State<HomeScreen> {
         final progress = habitProvider.getTodayProgress();
         final weeklyAchievedDays = _computeWeeklyAchievedDays(habitProvider);
 
-        // Check for newly unlocked achievements
+        // Check for newly unlocked achievements (stones are shown after achievements dismiss)
         if (habitProvider.newlyUnlockedAchievements.isNotEmpty) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             _showAchievementDialog(context, habitProvider);
+          });
+        } else if (habitProvider.newlyUnlockedStones.isNotEmpty) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _showStoneUnlockSequence(context, habitProvider);
           });
         }
 
@@ -118,7 +124,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     FadeInDown(
                       duration: const Duration(milliseconds: 500),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
                         child: PremiumProfileHeader(
                           user: user,
                           totalHabits: habitProvider.totalHabits,
@@ -180,7 +186,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       duration: const Duration(milliseconds: 500),
                       delay: const Duration(milliseconds: 250),
                       child: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20),
+                        padding: EdgeInsets.symmetric(horizontal: 24),
                         child: MotivationalQuoteCard(),
                       ),
                     ),
@@ -188,7 +194,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     // Quit Habits Section
                     if (quitHabits.isNotEmpty) ...[
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
                         child: Row(
                           children: [
                             const Icon(
@@ -210,14 +216,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 16),
                       ...quitHabits.map((habit) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12, left: 20, right: 20),
+                        padding: const EdgeInsets.only(bottom: 12, left: 24, right: 24),
                         child: QuitHabitCard(habit: habit),
                       )),
                       const SizedBox(height: 24),
                     ],
                     // Today's habits title
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -255,7 +261,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             // Compact Quick Action Bar for navigation - positioned above FAB/nav bar
             Positioned(
-              bottom: 90,
+              bottom: 5,
               left: 20,
               child: FadeInUp(
                 duration: const Duration(milliseconds: 400),
@@ -560,26 +566,12 @@ class _HomeScreenState extends State<HomeScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: color.withOpacity(0.15),
           borderRadius: BorderRadius.circular(16),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 16, color: color),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: color,
-              ),
-            ),
-          ],
-        ),
+        child: Icon(icon, size: 20, color: color),
       ),
     );
   }
@@ -684,12 +676,41 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              Navigator.pop(context);
+              // Show stone unlocks after achievement dialog closes
+              if (provider.newlyUnlockedStones.isNotEmpty) {
+                _showStoneUnlockSequence(context, provider);
+              }
+            },
             child: const Text('Awesome!'),
           ),
         ],
       ),
     );
+  }
+
+  void _showStoneUnlockSequence(BuildContext context, HabitProvider provider) {
+    final stoneIds = List<String>.from(provider.newlyUnlockedStones);
+    if (stoneIds.isEmpty) return;
+
+    provider.clearNewlyUnlockedStones();
+
+    _showNextStoneAnimation(context, stoneIds, 0);
+  }
+
+  void _showNextStoneAnimation(BuildContext context, List<String> stoneIds, int index) {
+    if (index >= stoneIds.length) return;
+
+    final stone = StoneModel.getById(stoneIds[index]);
+    if (stone == null) {
+      _showNextStoneAnimation(context, stoneIds, index + 1);
+      return;
+    }
+
+    StoneUnlockAnimation.show(context, stone).then((_) {
+      _showNextStoneAnimation(context, stoneIds, index + 1);
+    });
   }
 
   void _showProfileDetails(BuildContext context, HabitProvider provider) {
@@ -702,7 +723,7 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context) => Container(
         padding: const EdgeInsets.all(24),
         decoration: const BoxDecoration(
-          color: AppColors.darkCard,
+          color: Colors.black,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(

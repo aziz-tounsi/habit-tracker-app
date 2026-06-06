@@ -1,4 +1,4 @@
-package com.example.habit_tracker_app
+package com.aziztounsi.rytto
 
 import io.flutter.embedding.android.FlutterActivity
 

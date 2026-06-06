@@ -8,17 +8,20 @@ class NotificationService {
   factory NotificationService() => _instance;
   NotificationService._();
 
-  final FlutterLocalNotificationsPlugin _notifications = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _notifications =
+      FlutterLocalNotificationsPlugin();
   bool _initialized = false;
   int? _quietStartMinutes; // 0-1439 minutes from midnight
-  int? _quietEndMinutes;   // 0-1439 minutes from midnight
+  int? _quietEndMinutes; // 0-1439 minutes from midnight
 
   Future<void> init() async {
     if (_initialized) return;
 
     tz.initializeTimeZones();
 
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
@@ -44,15 +47,19 @@ class NotificationService {
   }
 
   Future<bool> requestPermissions() async {
-    final android = _notifications.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
+    final android = _notifications
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     if (android != null) {
       final granted = await android.requestNotificationsPermission();
       return granted ?? false;
     }
 
-    final ios = _notifications.resolvePlatformSpecificImplementation<
-        IOSFlutterLocalNotificationsPlugin>();
+    final ios = _notifications
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >();
     if (ios != null) {
       final granted = await ios.requestPermissions(
         alert: true,
@@ -65,11 +72,17 @@ class NotificationService {
     return true;
   }
 
+  int _notificationId(int baseId, int day) {
+    // Android requires notification IDs to fit in a 32-bit signed int
+    return ((baseId % 200000000).abs() * 10 + day).abs();
+  }
+
   Future<void> scheduleHabitReminder({
     required int id,
     required String habitName,
     required String time, // HH:mm format
-    required List<int> days, // 0 = Monday, 6 = Sunday
+    required List<int>
+    days, // 1 = Monday, 7 = Sunday (Dart DateTime weekday format)
   }) async {
     await _refreshQuietHours();
     await cancelNotification(id);
@@ -79,14 +92,15 @@ class NotificationService {
     final minute = int.parse(parts[1]);
 
     for (var day in days) {
-      final weekDay = day + 1; // Convert to 1 = Monday, 7 = Sunday
-      
+      // Ensure day is in valid range (1-7)
+      final weekDay = day.clamp(1, 7);
+
       final scheduledTime = _applyQuietHours(
         _nextInstanceOfDay(weekDay, hour, minute),
       );
 
       await _notifications.zonedSchedule(
-        id * 10 + day, // Unique ID for each day
+        _notificationId(id, day), // Unique ID for each day
         'Habit Reminder',
         "Time to complete: $habitName",
         scheduledTime,
@@ -105,19 +119,36 @@ class NotificationService {
             presentSound: true,
           ),
         ),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
         matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
       );
     }
   }
 
   tz.TZDateTime _nextInstanceOfDay(int weekDay, int hour, int minute) {
-    final now = tz.TZDateTime.now(tz.local);
-    var scheduled = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
+    // Ensure weekDay is valid (1 = Monday, 7 = Sunday)
+    if (weekDay < 1 || weekDay > 7) {
+      weekDay = 1; // Default to Monday if invalid
+    }
 
-    while (scheduled.weekday != weekDay || scheduled.isBefore(now)) {
+    final now = tz.TZDateTime.now(tz.local);
+    var scheduled = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      hour,
+      minute,
+    );
+
+    // Safety limit to prevent infinite loop - max 7 days to find the next occurrence
+    int attempts = 0;
+    while ((scheduled.weekday != weekDay || scheduled.isBefore(now)) &&
+        attempts < 8) {
       scheduled = scheduled.add(const Duration(days: 1));
+      attempts++;
     }
 
     return scheduled;
@@ -144,7 +175,8 @@ class NotificationService {
   }
 
   tz.TZDateTime _applyQuietHours(tz.TZDateTime scheduled) {
-    if (_quietStartMinutes == null || _quietEndMinutes == null) return scheduled;
+    if (_quietStartMinutes == null || _quietEndMinutes == null)
+      return scheduled;
     if (_quietStartMinutes == _quietEndMinutes) return scheduled;
 
     final minuteOfDay = scheduled.hour * 60 + scheduled.minute;
@@ -200,7 +232,7 @@ class NotificationService {
   Future<void> cancelNotification(int id) async {
     // Cancel all day-specific notifications for this habit
     for (var day = 0; day < 7; day++) {
-      await _notifications.cancel(id * 10 + day);
+      await _notifications.cancel(_notificationId(id, day));
     }
   }
 

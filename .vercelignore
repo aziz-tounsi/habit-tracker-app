@@ -1,0 +1,33 @@
+# Flutter/Dart
+.dart_tool/
+.packages
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test
+test/
+integration_test/
+
+# Android/iOS
+android/
+ios/
+macos/
+linux/
+windows/
+
+# Git
+.git/
+.gitignore

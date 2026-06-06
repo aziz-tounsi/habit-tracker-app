@@ -2,136 +2,152 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../core/theme/app_theme.dart';
 
-/// Premium gradient area chart for statistics
 class PremiumStatsChart extends StatelessWidget {
   final List<double> weekData;
-  final String selectedPeriod; // 'Week', 'Month', 'Lifetime'
-  
+  final String selectedPeriod;
+
   static const List<String> _daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  
+
   const PremiumStatsChart({
     super.key,
     required this.weekData,
     this.selectedPeriod = 'Week',
   });
 
+  List<String> _getLabels() {
+    switch (selectedPeriod) {
+      case 'Week':
+        return List.generate(weekData.length, (i) => _daysOfWeek[i % 7]);
+      case 'Month':
+        return List.generate(weekData.length, (i) => '${i + 1}');
+      default:
+        final months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        final now = DateTime.now();
+        return List.generate(weekData.length, (i) {
+          final m = DateTime(now.year, now.month - (weekData.length - 1 - i), 1);
+          return months[m.month];
+        });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final labels = _getLabels();
+    final maxY = weekData.isEmpty
+        ? 1.0
+        : weekData.reduce((a, b) => a > b ? a : b).ceilToDouble().clamp(1, double.infinity);
+    final isMonth = selectedPeriod == 'Month';
+
     return Container(
       height: 200,
       padding: const EdgeInsets.all(16),
-      child: LineChart(
-        LineChartData(
-          gridData: FlGridData(
-            show: true,
-            drawVerticalLine: false,
-            horizontalInterval: 1,
-            getDrawingHorizontalLine: (value) {
-              return FlLine(
-                color: Colors.white.withOpacity(0.05),
-                strokeWidth: 1,
-              );
-            },
-          ),
-          titlesData: FlTitlesData(
-            show: true,
-            rightTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
-            ),
-            topTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
-            ),
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                reservedSize: 30,
-                interval: 1,
-                getTitlesWidget: (value, meta) {
-                  if (value.toInt() >= 0 && value.toInt() < _daysOfWeek.length) {
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(
-                        _daysOfWeek[value.toInt()],
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.5),
-                          fontSize: 10,
+      child: weekData.isEmpty || weekData.every((d) => d == 0)
+          ? Center(
+              child: Text(
+                'No activity yet',
+                style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14),
+              ),
+            )
+          : BarChart(
+              BarChartData(
+                alignment: BarChartAlignment.spaceAround,
+                maxY: maxY * 1.2,
+                minY: 0,
+                barTouchData: BarTouchData(
+                  enabled: true,
+                  touchTooltipData: BarTouchTooltipData(
+                    tooltipRoundedRadius: 8,
+                    getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                      return BarTooltipItem(
+                        '${rod.toY.toInt()}',
+                        const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      );
+                    },
+                  ),
+                ),
+                titlesData: FlTitlesData(
+                  show: true,
+                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 30,
+                      getTitlesWidget: (value, meta) {
+                        final index = value.toInt();
+                        if (index >= 0 && index < labels.length) {
+                          final step = isMonth ? 5 : 1;
+                          if (selectedPeriod == 'Lifetime' || index % step == 0) {
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(
+                                labels[index],
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.5),
+                                  fontSize: isMonth ? 8 : 10,
+                                ),
+                              ),
+                            );
+                          }
+                        }
+                        return const SizedBox();
+                      },
+                    ),
+                  ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 30,
+                      interval: maxY > 4 ? (maxY / 4).ceilToDouble() : 1,
+                      getTitlesWidget: (value, meta) {
+                        return Text(
+                          value.toInt().toString(),
+                          style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  horizontalInterval: maxY > 4 ? (maxY / 4).ceilToDouble() : 1,
+                  getDrawingHorizontalLine: (value) {
+                    return FlLine(color: Colors.white.withOpacity(0.05), strokeWidth: 1);
+                  },
+                ),
+                barGroups: List.generate(weekData.length, (index) {
+                  return BarChartGroupData(
+                    x: index,
+                    barRods: [
+                      BarChartRodData(
+                        toY: weekData[index],
+                        gradient: AppColors.primaryGradient,
+                        width: selectedPeriod == 'Week' ? 24 : (isMonth ? 8 : 20),
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                        backDrawRodData: BackgroundBarChartRodData(
+                          show: true,
+                          toY: maxY * 1.2,
+                          color: Colors.white.withOpacity(0.05),
                         ),
                       ),
-                    );
-                  }
-                  return const SizedBox();
-                },
-              ),
-            ),
-            leftTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                interval: 2,
-                reservedSize: 40,
-                getTitlesWidget: (value, meta) {
-                  return Text(
-                    value.toInt().toString(),
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.5),
-                      fontSize: 10,
-                    ),
+                    ],
                   );
-                },
+                }),
               ),
             ),
-          ),
-          borderData: FlBorderData(show: false),
-          minX: 0,
-          maxX: 6,
-          minY: 0,
-          maxY: weekData.reduce((a, b) => a > b ? a : b).ceilToDouble() + 2,
-          lineBarsData: [
-            LineChartBarData(
-              spots: List.generate(
-                weekData.length,
-                (index) => FlSpot(index.toDouble(), weekData[index]),
-              ),
-              isCurved: true,
-              gradient: AppColors.primaryGradient,
-              barWidth: 3,
-              isStrokeCapRound: true,
-              dotData: FlDotData(
-                show: true,
-                getDotPainter: (spot, percent, barData, index) {
-                  return FlDotCirclePainter(
-                    radius: 4,
-                    color: AppColors.primaryPurple,
-                    strokeWidth: 2,
-                    strokeColor: Colors.white,
-                  );
-                },
-              ),
-              belowBarData: BarAreaData(
-                show: true,
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    AppColors.primaryPurple.withOpacity(0.3),
-                    AppColors.primaryPurple.withOpacity(0.0),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
 
-/// Period selector tabs (Week/Month/Lifetime)
 class PeriodSelector extends StatelessWidget {
   final String selectedPeriod;
   final Function(String) onPeriodChanged;
-  
+
   static const List<String> _periods = ['Week', 'Month', 'Lifetime'];
-  
+
   const PeriodSelector({
     super.key,
     required this.selectedPeriod,

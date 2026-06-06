@@ -26,7 +26,7 @@ class StoneUnlockAnimation extends StatefulWidget {
     
     return showDialog(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: true,
       barrierColor: Colors.black.withOpacity(0.85),
       builder: (context) => StoneUnlockAnimation(
         stone: stone,
@@ -128,7 +128,7 @@ class _StoneUnlockAnimationState extends State<StoneUnlockAnimation>
   }
 
   void _generateParticles() {
-    for (int i = 0; i < 50; i++) {
+    for (int i = 0; i < 25; i++) {
       _particles.add(_Particle(
         angle: _random.nextDouble() * 2 * math.pi,
         speed: 50 + _random.nextDouble() * 100,
@@ -140,11 +140,11 @@ class _StoneUnlockAnimationState extends State<StoneUnlockAnimation>
   }
 
   void _generateRunes() {
-    const runeSymbols = ['◇', '✦', '❋', '✧', '⬡', '◈'];
-    for (int i = 0; i < 6; i++) {
+    const runeSymbols = ['◇', '✦', '❋', '✧'];
+    for (int i = 0; i < 4; i++) {
       _runes.add(_MagicRune(
         symbol: runeSymbols[i],
-        angle: (i / 6) * 2 * math.pi,
+        angle: (i / 4) * 2 * math.pi,
         radius: 100,
       ));
     }

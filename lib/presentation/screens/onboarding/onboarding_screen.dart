@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
-import 'package:confetti/confetti.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/habit_suggestions.dart';
 import '../../../core/constants/app_constants.dart';
-import '../../../core/constants/premium_icons.dart';
-import '../../../core/constants/avatars.dart';
 import '../../../providers/habit_provider.dart';
 import '../../../providers/onboarding_provider.dart';
 import '../../widgets/common/gradient_button.dart';
@@ -23,15 +20,30 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   final TextEditingController _nameController = TextEditingController();
-  final ConfettiController _confettiController =
-      ConfettiController(duration: const Duration(seconds: 3));
   int _currentPage = 0;
+  bool _isCompleting = false;
+
+  // List of actual avatar image file names
+  static const List<String> _avatarFileNames = [
+    '1d8gtw1d8gtw1d8g',
+    '3wzusr3wzusr3wzu',
+    '6yaeg6yaeg6yaeg6',
+    '73wn1j73wn1j73wn',
+    '7ro6yx7ro6yx7ro6',
+    'he1ml7he1ml7he1m',
+    'kzsyvkzsyvkzsyvk',
+    'v27t6wv27t6wv27t',
+    'v4c5stv4c5stv4c5',
+  ];
+
+  String _getAvatarPath(int index) {
+    return 'assets/avatars/Gemini_Generated_Image_${_avatarFileNames[index]}.png';
+  }
 
   @override
   void dispose() {
     _pageController.dispose();
     _nameController.dispose();
-    _confettiController.dispose();
     super.dispose();
   }
 
@@ -56,37 +68,46 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Future<void> _completeOnboarding() async {
-    final onboardingProvider = context.read<OnboardingProvider>();
-    await onboardingProvider.saveOnboardingData();
-    
-    // Create habits from selections
-    final selectedGoodHabits = onboardingProvider.selectedGoodHabits;
-    final selectedBadHabits = onboardingProvider.selectedBadHabits;
-    
-    // Add GOOD habits (to build)
-    for (final habitName in selectedGoodHabits) {
-      await _addHabitFromSelection(
-        habitName: habitName,
-        habitList: HabitSuggestions.goodHabits.map((h) => h.toMap()).toList(),
-        isQuit: false,
-        colorIndex: 0,
-        provider: onboardingProvider,
-      );
-    }
-    
-    // Add BAD habits (to quit)
-    for (final habitName in selectedBadHabits) {
-      await _addHabitFromSelection(
-        habitName: habitName,
-        habitList: HabitSuggestions.badHabits.map((h) => h.toMap()).toList(),
-        isQuit: true,
-        colorIndex: 1,
-        provider: onboardingProvider,
-      );
-    }
-    
-    if (mounted) {
-      await context.read<HabitProvider>().completeOnboarding();
+    if (_isCompleting) return;
+    _isCompleting = true;
+    try {
+      final onboardingProvider = context.read<OnboardingProvider>();
+      await onboardingProvider.saveOnboardingData();
+
+      final selectedGoodHabits = onboardingProvider.selectedGoodHabits;
+      final selectedBadHabits = onboardingProvider.selectedBadHabits;
+
+      for (final habitName in selectedGoodHabits) {
+        await _addHabitFromSelection(
+          habitName: habitName,
+          habitList: HabitSuggestions.goodHabits.map((h) => h.toMap()).toList(),
+          isQuit: false,
+          colorIndex: 0,
+          provider: onboardingProvider,
+        );
+      }
+
+      for (final habitName in selectedBadHabits) {
+        await _addHabitFromSelection(
+          habitName: habitName,
+          habitList: HabitSuggestions.badHabits.map((h) => h.toMap()).toList(),
+          isQuit: true,
+          colorIndex: 1,
+          provider: onboardingProvider,
+        );
+      }
+
+      if (mounted) {
+        await context.read<HabitProvider>().completeOnboarding();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      _isCompleting = false;
     }
   }
 
@@ -100,7 +121,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   /// Get reminder time based on habit category and schedule preference
   String _getReminderTime(String category, String schedulePreference) {
     final isMorning = schedulePreference == 'morning';
-    
+
     // Morning habits (Fitness, Health, Productivity)
     if (['Fitness', 'Health', 'Productivity'].contains(category)) {
       return isMorning ? '07:00' : '09:00';
@@ -124,17 +145,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       (h) => h['name'] == habitName,
       orElse: () => <String, dynamic>{},
     );
-    
+
     // Skip if habit not found
     if (habitData.isEmpty) return;
-    
+
     final category = habitData['category'] as String;
-    final reminderTime = _getReminderTime(category, provider.schedulePreference);
-    // Use preferred days from provider, defaulting to all days if somehow empty
-    final preferredDays = provider.preferredDays.isEmpty 
+    final reminderTime = _getReminderTime(
+      category,
+      provider.schedulePreference,
+    );
+    // Use preferred days from provider (1-7 format), defaulting to all days
+    final rawDays = provider.preferredDays.isEmpty
         ? [1, 2, 3, 4, 5, 6, 7]
         : provider.preferredDays;
-    
+    // Convert from Dart weekday format (1=Monday) to HabitModel format (0=Monday)
+    final preferredDays = rawDays.map((d) => d - 1).toList();
+
     final habitProvider = context.read<HabitProvider>();
     await habitProvider.addHabit(
       name: habitData['name'] as String,
@@ -189,9 +215,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   physics: const NeverScrollableScrollPhysics(),
                   onPageChanged: (index) {
                     setState(() => _currentPage = index);
-                    if (index == 6) {
-                      _confettiController.play();
-                    }
                   },
                   children: [
                     _buildWelcomePage(),
@@ -221,9 +244,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         gradient: _currentPage == index
                             ? AppColors.primaryGradient
                             : null,
-                        color: _currentPage == index
-                            ? null
-                            : Colors.white24,
+                        color: _currentPage == index ? null : Colors.white24,
                       ),
                     ),
                   ),
@@ -259,11 +280,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ],
               ),
               child: const Center(
-                child: Icon(
-                  Icons.check_circle,
-                  size: 70,
-                  color: Colors.white,
-                ),
+                child: Icon(Icons.check_circle, size: 70, color: Colors.white),
               ),
             ),
           ),
@@ -272,9 +289,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             duration: const Duration(milliseconds: 600),
             delay: const Duration(milliseconds: 200),
             child: ShaderMask(
-              shaderCallback: (bounds) => AppColors.primaryGradient.createShader(bounds),
+              shaderCallback: (bounds) =>
+                  AppColors.primaryGradient.createShader(bounds),
               child: Text(
-                'Welcome to Habit Tracker',
+                'Welcome to Rytto',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 32,
@@ -289,7 +307,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             duration: const Duration(milliseconds: 600),
             delay: const Duration(milliseconds: 400),
             child: const Text(
-              'Your journey to better habits starts here ✨',
+              'Your journey to better habits starts here',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
@@ -363,32 +381,41 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 4,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
+                  crossAxisCount: 3,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
                 ),
-                itemCount: PremiumAvatars.options.length,
+                itemCount: 9, // 9 avatar images available
                 itemBuilder: (context, index) {
-                  final avatarOption = PremiumAvatars.options[index];
-                  final isSelected = provider.userAvatar == avatarOption.id;
+                  final avatarPath = _getAvatarPath(index);
+                  final avatarId = 'avatar_$index';
+                  final isSelected = provider.userAvatar == avatarId;
                   return GestureDetector(
-                    onTap: () => provider.setUserAvatar(avatarOption.id),
+                    onTap: () => provider.setUserAvatar(avatarId),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
+                        shape: BoxShape.circle,
                         border: Border.all(
                           color: isSelected
                               ? AppColors.primaryPurple
                               : Colors.transparent,
                           width: 3,
                         ),
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: AppColors.primaryPurple.withOpacity(
+                                    0.4,
+                                  ),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ]
+                            : null,
                       ),
-                      child: GradientAvatarBuilder(
-                        seed: avatarOption.id,
-                        size: 60,
-                        gradientColors: avatarOption.gradientColors,
-                        icon: avatarOption.icon,
+                      child: ClipOval(
+                        child: Image.asset(avatarPath, fit: BoxFit.cover),
                       ),
                     ),
                   );
@@ -411,80 +438,89 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget _buildGoalsPage() {
     return Consumer<OnboardingProvider>(
       builder: (context, provider, child) {
-        return SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 40),
-          child: Column(
-            children: [
-              const SizedBox(height: 40),
-              const Text(
-                'What Brings You Here?',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Select all that apply',
-                style: TextStyle(color: Colors.white70, fontSize: 14),
-              ),
-              const SizedBox(height: 30),
-              ...HabitSuggestions.userGoals.map((goal) {
-                final isSelected = provider.selectedGoals.contains(goal);
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: GestureDetector(
-                    onTap: () => provider.toggleGoal(goal),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        color: isSelected
-                            ? AppColors.primaryPurple.withAlpha(102)
-                            : Colors.white.withAlpha(25),
-                        border: Border.all(
-                          color: isSelected
-                              ? AppColors.primaryPurple
-                              : Colors.transparent,
-                          width: 2,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              goal,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                          if (isSelected)
-                            const Icon(
-                              Icons.check_circle,
-                              color: AppColors.primaryPurple,
-                            ),
-                        ],
-                      ),
+        return Column(
+          children: [
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+              child: Column(
+                children: [
+                  Text(
+                    'What Brings You Here?',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
-                );
-              }),
-              const SizedBox(height: 30),
-              GradientButton(
+                  SizedBox(height: 8),
+                  Text(
+                    'Select all that apply',
+                    style: TextStyle(color: Colors.white70, fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 40),
+                children: HabitSuggestions.userGoals.map((goal) {
+                  final isSelected = provider.selectedGoals.contains(goal);
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: GestureDetector(
+                      onTap: () => provider.toggleGoal(goal),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          color: isSelected
+                              ? AppColors.primaryPurple.withAlpha(102)
+                              : Colors.white.withAlpha(25),
+                          border: Border.all(
+                            color: isSelected
+                                ? AppColors.primaryPurple
+                                : Colors.transparent,
+                            width: 2,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                goal,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                            if (isSelected)
+                              const Icon(
+                                Icons.check_circle,
+                                color: AppColors.primaryPurple,
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: GradientButton(
                 text: 'Continue',
-                onPressed:
-                    provider.selectedGoals.isNotEmpty ? _nextPage : () {},
+                onPressed: provider.selectedGoals.isNotEmpty
+                    ? _nextPage
+                    : () {},
                 width: double.infinity,
               ),
-              const SizedBox(height: 40),
-            ],
-          ),
+            ),
+          ],
         );
       },
     );
@@ -493,15 +529,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget _buildGoodHabitsPage() {
     return Consumer<OnboardingProvider>(
       builder: (context, provider, child) {
-        // Sort habits by recommendation based on user's selected goals
         final sortedHabits = HabitSuggestions.sortGoodHabitsByRecommendation(
           HabitSuggestions.goodHabits,
           provider.selectedGoals,
         );
-        final recommendedCategories = HabitSuggestions.getRecommendedGoodCategories(
-          provider.selectedGoals,
-        );
-        
+
         return Column(
           children: [
             const Padding(
@@ -537,15 +569,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 itemCount: sortedHabits.length,
                 itemBuilder: (context, index) {
                   final habit = sortedHabits[index];
-                  final isSelected =
-                      provider.selectedGoodHabits.contains(habit.name);
-                  final isRecommended = recommendedCategories.contains(habit.category);
-                  
+                  final isSelected = provider.selectedGoodHabits.contains(
+                    habit.name,
+                  );
+
                   return GestureDetector(
                     onTap: () => provider.toggleGoodHabit(habit.name),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
                         color: isSelected
@@ -554,63 +589,34 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         border: Border.all(
                           color: isSelected
                               ? AppColors.accentGreen
-                              : isRecommended
-                                  ? AppColors.warning.withAlpha(128)
-                                  : Colors.transparent,
+                              : Colors.transparent,
                           width: 2,
                         ),
                       ),
-                      child: Stack(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Column(
-                            mainAxisSize: MainAxisSize.min,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                habit.icon,
-                                size: 28,
-                                color: Colors.white,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                habit.name,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              if (isSelected)
-                                const Padding(
-                                  padding: EdgeInsets.only(top: 2),
-                                  child: Icon(
-                                    Icons.check_circle,
-                                    color: AppColors.accentGreen,
-                                    size: 14,
-                                  ),
-                                ),
-                            ],
+                          Icon(habit.icon, size: 28, color: Colors.white),
+                          const SizedBox(height: 4),
+                          Text(
+                            habit.name,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          if (isRecommended)
-                            Positioned(
-                              top: 0,
-                              right: 0,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 4,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.warning.withAlpha(204),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: const Text(
-                                  '✨',
-                                  style: TextStyle(fontSize: 10),
-                                ),
+                          if (isSelected)
+                            const Padding(
+                              padding: EdgeInsets.only(top: 2),
+                              child: Icon(
+                                Icons.check_circle,
+                                color: AppColors.accentGreen,
+                                size: 14,
                               ),
                             ),
                         ],
@@ -637,15 +643,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget _buildBadHabitsPage() {
     return Consumer<OnboardingProvider>(
       builder: (context, provider, child) {
-        // Sort habits by recommendation based on user's selected goals
         final sortedHabits = HabitSuggestions.sortBadHabitsByRecommendation(
           HabitSuggestions.badHabits,
           provider.selectedGoals,
         );
-        final recommendedCategories = HabitSuggestions.getRecommendedBadCategories(
-          provider.selectedGoals,
-        );
-        
+
         return Column(
           children: [
             const Padding(
@@ -681,15 +683,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 itemCount: sortedHabits.length,
                 itemBuilder: (context, index) {
                   final habit = sortedHabits[index];
-                  final isSelected =
-                      provider.selectedBadHabits.contains(habit.name);
-                  final isRecommended = recommendedCategories.contains(habit.category);
-                  
+                  final isSelected = provider.selectedBadHabits.contains(
+                    habit.name,
+                  );
+
                   return GestureDetector(
                     onTap: () => provider.toggleBadHabit(habit.name),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
                         color: isSelected
@@ -698,63 +703,34 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         border: Border.all(
                           color: isSelected
                               ? AppColors.error
-                              : isRecommended
-                                  ? AppColors.warning.withAlpha(128)
-                                  : Colors.transparent,
+                              : Colors.transparent,
                           width: 2,
                         ),
                       ),
-                      child: Stack(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Column(
-                            mainAxisSize: MainAxisSize.min,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                habit.icon,
-                                size: 28,
-                                color: Colors.white,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                habit.name,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              if (isSelected)
-                                const Padding(
-                                  padding: EdgeInsets.only(top: 2),
-                                  child: Icon(
-                                    Icons.check_circle,
-                                    color: AppColors.error,
-                                    size: 14,
-                                  ),
-                                ),
-                            ],
+                          Icon(habit.icon, size: 28, color: Colors.white),
+                          const SizedBox(height: 4),
+                          Text(
+                            habit.name,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          if (isRecommended)
-                            Positioned(
-                              top: 0,
-                              right: 0,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 4,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.warning.withAlpha(204),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: const Text(
-                                  '✨',
-                                  style: TextStyle(fontSize: 10),
-                                ),
+                          if (isSelected)
+                            const Padding(
+                              padding: EdgeInsets.only(top: 2),
+                              child: Icon(
+                                Icons.check_circle,
+                                color: AppColors.error,
+                                size: 14,
                               ),
                             ),
                         ],
@@ -874,7 +850,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                         child: const Column(
                           children: [
-                            Text('🌙', style: TextStyle(fontSize: 40)),
+                            Icon(Icons.nightlight_round, size: 40, color: AppColors.primaryPurple),
                             SizedBox(height: 8),
                             Text(
                               'Night',
@@ -962,14 +938,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget _buildCompletionPage() {
     return Consumer<OnboardingProvider>(
       builder: (context, provider, child) {
+        final avatarPath = _getAvatarPath(
+          int.tryParse(provider.userAvatar.replaceFirst('avatar_', '')) ?? 0,
+        );
+        
         return Stack(
           children: [
             SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 40,
+                  vertical: 20,
+                ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    // Show selected avatar
                     Container(
                       width: 150,
                       height: 150,
@@ -984,122 +968,102 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           ),
                         ],
                       ),
-                      child: Center(
-                        child: Icon(
-                          Iconsax.flash_1,
-                          size: 70,
-                          color: Colors.white,
+                      padding: const EdgeInsets.all(4),
+                      child: ClipOval(
+                        child: Image.asset(
+                          avatarPath,
+                          fit: BoxFit.cover,
+                          width: 142,
+                          height: 142,
                         ),
                       ),
                     ),
-                  const SizedBox(height: 40),
-                  const Text(
-                    'All Set!',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 36,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                    const SizedBox(height: 40),
+                    const Text(
+                      'All Set!',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 36,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Welcome, ${provider.userName}!',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      color: Colors.white70,
+                    const SizedBox(height: 16),
+                    Text(
+                      'Welcome, ${provider.userName}!',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        color: Colors.white70,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 30),
-                  Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      color: Colors.white.withAlpha(25),
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Iconsax.cup,
-                              size: 18,
-                              color: Colors.white,
-                            ),
-                            const SizedBox(width: 6),
-                            Flexible(
-                              child: Text(
-                                'You earned your first stone!',
+                    const SizedBox(height: 30),
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: Colors.white.withAlpha(25),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Iconsax.cup, size: 18, color: Colors.white),
+                              const SizedBox(width: 6),
+                              Flexible(
+                                child: Text(
+                                  'You earned your first stone!',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Iconsax.flash_1,
+                                size: 24,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(width: 8),
+                              const Text(
+                                'Celestial Quartz',
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
                                 ),
-                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Iconsax.flash_1,
-                              size: 24,
-                              color: Colors.white,
-                            ),
-                            const SizedBox(width: 8),
-                            const Text(
-                              'Starter Crystal',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Your journey begins now!',
-                          style: TextStyle(
-                            color: Colors.white.withAlpha(179),
-                            fontSize: 14,
+                            ],
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 8),
+                          Text(
+                            'Your journey begins now!',
+                            style: TextStyle(
+                              color: Colors.white.withAlpha(179),
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 60),
-                  GradientButton(
-                    text: 'Begin Your Journey',
-                    onPressed: _completeOnboarding,
-                    width: double.infinity,
-                    icon: Icons.rocket_launch,
-                  ),
+                    const SizedBox(height: 60),
+                    GradientButton(
+                      text: 'Begin Your Journey',
+                      onPressed: _completeOnboarding,
+                      width: double.infinity,
+                      icon: Icons.rocket_launch,
+                    ),
                   ],
                 ),
-              ),
-            ),
-            Align(
-              alignment: Alignment.topCenter,
-              child: ConfettiWidget(
-                confettiController: _confettiController,
-                blastDirection: 3.14 / 2,
-                particleDrag: 0.05,
-                emissionFrequency: 0.05,
-                numberOfParticles: 50,
-                gravity: 0.1,
-                shouldLoop: false,
-                colors: const [
-                  AppColors.primaryPurple,
-                  AppColors.secondaryPink,
-                  AppColors.accentCyan,
-                  AppColors.accentGreen,
-                ],
               ),
             ),
           ],

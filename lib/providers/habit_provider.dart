@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../data/models/habit_model.dart';
 import '../data/models/user_model.dart';
 import '../data/models/achievement_model.dart';
@@ -6,6 +7,7 @@ import '../data/repositories/habit_repository.dart';
 import '../data/services/notification_service.dart';
 import '../core/constants/app_constants.dart';
 import '../core/utils/helpers.dart';
+import '../data/models/stone_model.dart';
 
 class HabitProvider extends ChangeNotifier {
   final HabitRepository _repository = HabitRepository();
@@ -16,16 +18,20 @@ class HabitProvider extends ChangeNotifier {
   bool _isLoading = true;
   String? _error;
   List<String> _newlyUnlockedAchievements = [];
+  List<String> _newlyUnlockedStones = [];
 
   // Getters
   List<HabitModel> get habits => _habits;
   List<HabitModel> get todayHabits => _repository.getHabitsForToday();
-  List<HabitModel> get quitHabits => _habits.where((h) => h.isQuitHabit && !h.isArchived).toList();
-  List<HabitModel> get buildHabits => _habits.where((h) => !h.isQuitHabit && !h.isArchived).toList();
+  List<HabitModel> get quitHabits =>
+      _habits.where((h) => h.isQuitHabit && !h.isArchived).toList();
+  List<HabitModel> get buildHabits =>
+      _habits.where((h) => !h.isQuitHabit && !h.isArchived).toList();
   UserModel? get user => _user;
   bool get isLoading => _isLoading;
   String? get error => _error;
   List<String> get newlyUnlockedAchievements => _newlyUnlockedAchievements;
+  List<String> get newlyUnlockedStones => _newlyUnlockedStones;
   bool get hasCompletedOnboarding => _user?.hasCompletedOnboarding ?? false;
 
   // Statistics
@@ -99,8 +105,20 @@ class HabitProvider extends ChangeNotifier {
   Future<void> completeOnboarding() async {
     if (_user == null) return;
 
-    _user = _user!.copyWith(hasCompletedOnboarding: true);
+    // Load user name and avatar from SharedPreferences (saved during onboarding)
+    final prefs = await SharedPreferences.getInstance();
+    final userName = prefs.getString('user_name') ?? 'User';
+    final userAvatar = prefs.getString('user_avatar') ?? 'avatar_0';
+
+    // Update user with onboarding data and award starter stone
+    _user = _user!.copyWith(
+      hasCompletedOnboarding: true,
+      name: userName,
+      avatarEmoji: userAvatar, // Reusing avatarEmoji field to store avatar ID
+      unlockedStones: ['celestial_quartz', ..._user!.unlockedStones],
+    );
     await _repository.saveUser(_user!);
+    _newlyUnlockedStones.add('celestial_quartz');
     notifyListeners();
   }
 
@@ -118,6 +136,11 @@ class HabitProvider extends ChangeNotifier {
     DateTime? quitStartDate,
     double? moneySavedPerDay,
   }) async {
+    // Skip if habit with same name already exists
+    if (_habits.any((h) => h.name == name && h.isQuitHabit == isQuitHabit)) {
+      return;
+    }
+
     final habit = HabitModel(
       id: Helpers.generateId(),
       name: name,
@@ -149,7 +172,7 @@ class HabitProvider extends ChangeNotifier {
 
     // Check for new achievements
     await _checkAchievements();
-    
+
     notifyListeners();
   }
 
@@ -170,7 +193,7 @@ class HabitProvider extends ChangeNotifier {
 
     // Check for new achievements
     await _checkAchievements();
-    
+
     notifyListeners();
   }
 
@@ -211,24 +234,24 @@ class HabitProvider extends ChangeNotifier {
     final targetDate = date ?? DateTime.now();
     final dateKey = Helpers.formatDateForStorage(targetDate);
     final habit = _repository.getHabitById(habitId);
-    
+
     if (habit == null) return;
 
     final wasCompleted = habit.isCompletedOn(dateKey);
-    
+
     await _repository.toggleHabitCompletion(habitId, targetDate);
     _habits = _repository.getAllHabits();
 
     // Add XP for completion
     if (!wasCompleted) {
       int xpGained = AppConstants.baseXP;
-      
+
       // Check for streak bonus
       final updatedHabit = _repository.getHabitById(habitId);
       if (updatedHabit != null) {
         xpGained += Helpers.calculateStreakBonus(updatedHabit.currentStreak);
       }
-      
+
       await _repository.updateUserXP(xpGained);
       _user = _repository.getUser();
     }
@@ -242,7 +265,7 @@ class HabitProvider extends ChangeNotifier {
   Future<void> _checkAchievements() async {
     _newlyUnlockedAchievements = await _repository.checkAndUnlockAchievements();
     _user = _repository.getUser();
-    
+
     // Award XP for newly unlocked achievements
     for (var achievementId in _newlyUnlockedAchievements) {
       final achievement = AchievementModel.getById(achievementId);
@@ -251,10 +274,154 @@ class HabitProvider extends ChangeNotifier {
       }
     }
     _user = _repository.getUser();
+
+    // Also check for stone unlocks
+    await _checkStones();
+  }
+
+  Future<void> _checkStones() async {
+    final user = _user;
+    if (user == null) return;
+
+    for (final stone in StoneModel.allStones) {
+      if (user.hasStone(stone.id)) continue;
+
+      bool shouldUnlock = false;
+
+      switch (stone.id) {
+        // Common stones
+        case 'celestial_quartz':
+          shouldUnlock = user.hasCompletedOnboarding;
+        case 'crystal_rose_quartz':
+          shouldUnlock = completedTodayCount >= 3;
+        case 'spirit_jade':
+          shouldUnlock = _habits.length >= 3;
+        case 'ancient_amber':
+          shouldUnlock = _habits.any((h) => h.currentStreak >= 3);
+        case 'nature_peridot':
+          shouldUnlock = totalCompletions >= 5;
+        case 'earth_jasper':
+          shouldUnlock = currentMaxStreak >= 5;
+        case 'starlight_pearl':
+          shouldUnlock = _checkHabitBefore6AM();
+        case 'wisdom_turquoise':
+          shouldUnlock = totalCompletions >= 10;
+        case 'harmony_malachite':
+          shouldUnlock = isTodayPerfect();
+        case 'golden_pyrite':
+          shouldUnlock = level >= 2;
+
+        // Rare stones
+        case 'phoenix_ruby':
+          shouldUnlock = currentMaxStreak >= 7;
+        case 'frost_sapphire':
+          shouldUnlock = level >= 5;
+        case 'shadow_amethyst':
+          shouldUnlock = totalCompletions >= 25;
+        case 'storm_topaz':
+          shouldUnlock = currentMaxStreak >= 14;
+        case 'ocean_aquamarine':
+          shouldUnlock = totalCompletions >= 30;
+        case 'solar_citrine':
+          shouldUnlock = totalCompletions >= 50;
+        case 'inferno_garnet':
+          shouldUnlock = level >= 7;
+        case 'thunder_lapis':
+          shouldUnlock = completedTodayCount >= 5;
+        case 'prism_tourmaline':
+          shouldUnlock = currentMaxStreak >= 21;
+        case 'lunar_selenite':
+          shouldUnlock = _checkHabitAfter10PM();
+
+        // Epic stones
+        case 'enchanted_emerald':
+          shouldUnlock = currentMaxStreak >= 30;
+        case 'aurora_crystal':
+          shouldUnlock = level >= 10;
+        case 'dragons_eye':
+          shouldUnlock = totalCompletions >= 100;
+        case 'twilight_tanzanite':
+          shouldUnlock = currentMaxStreak >= 45;
+        case 'royal_alexandrite':
+          shouldUnlock = level >= 15;
+        case 'dream_labradorite':
+          shouldUnlock = totalCompletions >= 150;
+        case 'nebula_fluorite':
+          shouldUnlock = currentMaxStreak >= 60;
+        case 'time_onyx':
+          shouldUnlock = _checkPerfectTwoWeeks();
+
+        // Legendary stones
+        case 'void_obsidian':
+          shouldUnlock = currentMaxStreak >= 100;
+        case 'ethereal_moonstone':
+          shouldUnlock = level >= 20;
+        case 'cosmic_diamond':
+          shouldUnlock = currentMaxStreak >= 365;
+        case 'mystic_opal':
+          shouldUnlock = totalCompletions >= 500;
+        case 'zen_bloodstone':
+          shouldUnlock = currentMaxStreak >= 200;
+      }
+
+      if (shouldUnlock) {
+        user.unlockStone(stone.id);
+        await _repository.saveUser(user);
+        _newlyUnlockedStones.add(stone.id);
+
+        // Award XP for stone unlock
+        await _repository.updateUserXP(stone.xpReward);
+      }
+    }
+
+    _user = _repository.getUser();
+    notifyListeners();
+  }
+
+  bool _checkHabitBefore6AM() {
+    final now = DateTime.now();
+    final sixAM = DateTime(now.year, now.month, now.day, 6);
+    if (now.isBefore(sixAM)) {
+      final todayKey = Helpers.formatDateForStorage(now);
+      return todayHabits.any((h) => h.isCompletedOn(todayKey));
+    }
+    return false;
+  }
+
+  bool _checkHabitAfter10PM() {
+    final now = DateTime.now();
+    final tenPM = DateTime(now.year, now.month, now.day, 22);
+    if (now.isAfter(tenPM)) {
+      final todayKey = Helpers.formatDateForStorage(now);
+      return todayHabits.any((h) => h.isCompletedOn(todayKey));
+    }
+    return false;
+  }
+
+  bool _checkPerfectTwoWeeks() {
+    var consecutivePerfectDays = 0;
+    for (var i = 0; i < 14; i++) {
+      final date = DateTime.now().subtract(Duration(days: i));
+      final dateKey = Helpers.formatDateForStorage(date);
+      final habitsForDate = getHabitsForDate(date).where((h) => !h.isQuitHabit).toList();
+      if (habitsForDate.isEmpty) continue;
+      final allComplete = habitsForDate.every((h) => h.isCompletedOn(dateKey));
+      if (allComplete) {
+        consecutivePerfectDays++;
+      } else {
+        consecutivePerfectDays = 0;
+      }
+    }
+    return consecutivePerfectDays >= 14;
   }
 
   void clearNewlyUnlockedAchievements() {
     _newlyUnlockedAchievements = [];
+    notifyListeners();
+  }
+
+  void clearNewlyUnlockedStones() {
+    _newlyUnlockedStones = [];
     notifyListeners();
   }
 
@@ -311,15 +478,20 @@ class HabitProvider extends ChangeNotifier {
       final restoredUser = UserModel(
         id: userData['id'] as String,
         name: userData['name'] as String? ?? 'User',
-        avatarEmoji: userData['avatarEmoji'] as String? ?? '😊',
+        avatarEmoji: userData['avatarEmoji'] as String? ?? '',
         totalXP: userData['totalXP'] as int? ?? 0,
-        createdAt: DateTime.tryParse(userData['createdAt'] ?? '') ?? DateTime.now(),
-        hasCompletedOnboarding: userData['hasCompletedOnboarding'] as bool? ?? false,
+        createdAt:
+            DateTime.tryParse(userData['createdAt'] ?? '') ?? DateTime.now(),
+        hasCompletedOnboarding:
+            userData['hasCompletedOnboarding'] as bool? ?? false,
         isDarkMode: userData['isDarkMode'] as bool? ?? true,
         accentColorIndex: userData['accentColorIndex'] as int? ?? 0,
         notificationsEnabled: userData['notificationsEnabled'] as bool? ?? true,
-        unlockedAchievements: (userData['unlockedAchievements'] as List<dynamic>? ?? []).cast<String>(),
-        unlockedStones: (userData['unlockedStones'] as List<dynamic>? ?? []).cast<String>(),
+        unlockedAchievements:
+            (userData['unlockedAchievements'] as List<dynamic>? ?? [])
+                .cast<String>(),
+        unlockedStones: (userData['unlockedStones'] as List<dynamic>? ?? [])
+            .cast<String>(),
       );
       await _repository.saveUser(restoredUser);
       _user = restoredUser;
@@ -334,7 +506,8 @@ class HabitProvider extends ChangeNotifier {
         iconIndex: map['iconIndex'] as int? ?? 0,
         colorIndex: map['colorIndex'] as int? ?? 0,
         category: map['category'] as String? ?? 'General',
-        scheduledDays: (map['scheduledDays'] as List<dynamic>? ?? []).cast<int>(),
+        scheduledDays: (map['scheduledDays'] as List<dynamic>? ?? [])
+            .cast<int>(),
         targetDaysPerWeek: map['targetDaysPerWeek'] as int? ?? 7,
         createdAt: DateTime.tryParse(map['createdAt'] ?? '') ?? DateTime.now(),
         reminderTime: map['reminderTime'] as String?,
@@ -342,7 +515,8 @@ class HabitProvider extends ChangeNotifier {
         currentStreak: map['currentStreak'] as int? ?? 0,
         longestStreak: map['longestStreak'] as int? ?? 0,
         totalCompletions: map['totalCompletions'] as int? ?? 0,
-        completedDates: (map['completedDates'] as List<dynamic>? ?? []).cast<String>(),
+        completedDates: (map['completedDates'] as List<dynamic>? ?? [])
+            .cast<String>(),
         isQuitHabit: map['isQuitHabit'] as bool? ?? false,
         quitStartDate: map['quitStartDate'] != null
             ? DateTime.tryParse(map['quitStartDate'])
@@ -364,6 +538,10 @@ class HabitProvider extends ChangeNotifier {
   }
 
   // Statistics
+  Map<String, int> getCompletionsForDays(int days) {
+    return _repository.getCompletionsForDays(days);
+  }
+
   Map<String, int> getWeeklyCompletions() {
     return _repository.getWeeklyCompletions();
   }
@@ -380,6 +558,10 @@ class HabitProvider extends ChangeNotifier {
     return _repository.getMonthCompletions(month);
   }
 
+  Map<String, int> getLifetimeMonthlyCompletions() {
+    return _repository.getLifetimeMonthlyCompletions();
+  }
+
   List<HabitModel> getHabitsForDate(DateTime date) {
     return _repository.getHabitsForDate(date);
   }
@@ -388,9 +570,11 @@ class HabitProvider extends ChangeNotifier {
   double getTodayProgress() {
     final todayHabits = this.todayHabits;
     if (todayHabits.isEmpty) return 0;
-    
+
     final todayKey = Helpers.formatDateForStorage(DateTime.now());
-    final completed = todayHabits.where((h) => h.isCompletedOn(todayKey)).length;
+    final completed = todayHabits
+        .where((h) => h.isCompletedOn(todayKey))
+        .length;
     return completed / todayHabits.length;
   }
 

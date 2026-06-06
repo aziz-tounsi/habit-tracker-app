@@ -115,10 +115,10 @@ class _QuitHabitCardState extends State<QuitHabitCard> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.error.withAlpha(25),
+              color: AppColors.accentCyan.withAlpha(25),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: AppColors.error.withAlpha(51),
+                color: AppColors.accentCyan.withAlpha(51),
                 width: 1,
               ),
             ),
@@ -129,7 +129,7 @@ class _QuitHabitCardState extends State<QuitHabitCard> {
                   children: [
                     const Icon(
                       Icons.timer,
-                      color: AppColors.error,
+                      color: AppColors.accentCyan,
                       size: 20,
                     ),
                     const SizedBox(width: 8),
@@ -282,7 +282,7 @@ class _QuitHabitCardState extends State<QuitHabitCard> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            gradient: AppColors.errorGradient,
+            gradient: AppColors.cyanPurpleGradient,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(

@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -10,6 +11,7 @@ import 'package:animate_do/animate_do.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/constants/avatars.dart';
 import '../../../providers/habit_provider.dart';
 import '../../../providers/theme_provider.dart';
 import '../../../providers/auth_provider.dart';
@@ -58,71 +60,76 @@ class _SettingsScreenState extends State<SettingsScreen> {
           final user = habitProvider.user;
 
           return SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(vertical: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              FadeInDown(
-                duration: const Duration(milliseconds: 500),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Text(
-                    'Settings',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header with back button
+                FadeInDown(
+                  duration: const Duration(milliseconds: 500),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          icon: const Icon(Icons.arrow_back),
+                          style: IconButton.styleFrom(
+                            backgroundColor: Colors.white.withOpacity(0.1),
+                          ),
                         ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Settings',
+                          style: Theme.of(context).textTheme.headlineMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 24),
-              // Profile section
-              FadeInUp(
-                duration: const Duration(milliseconds: 500),
-                delay: const Duration(milliseconds: 100),
-                child: _buildProfileSection(context, habitProvider, user),
-              ),
-              const SizedBox(height: 24),
-              // Appearance section
-              FadeInUp(
-                duration: const Duration(milliseconds: 500),
-                delay: const Duration(milliseconds: 200),
-                child: _buildAppearanceSection(context, themeProvider),
-              ),
-              const SizedBox(height: 24),
-              // Notifications section
-              FadeInUp(
-                duration: const Duration(milliseconds: 500),
-                delay: const Duration(milliseconds: 300),
-                child: _buildNotificationsSection(context, habitProvider, user),
-              ),
-              const SizedBox(height: 24),
-              // Data section
-              FadeInUp(
-                duration: const Duration(milliseconds: 500),
-                delay: const Duration(milliseconds: 350),
-                child: _buildDataSection(context, habitProvider),
-              ),
-              const SizedBox(height: 24),
-              // About section
-              FadeInUp(
-                duration: const Duration(milliseconds: 500),
-                delay: const Duration(milliseconds: 400),
-                child: _buildAboutSection(context),
-              ),
-              const SizedBox(height: 24),
-              // Account section
-              FadeInUp(
-                duration: const Duration(milliseconds: 500),
-                delay: const Duration(milliseconds: 450),
-                child: _buildAccountSection(context),
-              ),
-              const SizedBox(height: 100),
-            ],
-          ),
-        );
-      },
-    ),
+                const SizedBox(height: 24),
+                // Profile section (without header text)
+                FadeInUp(
+                  duration: const Duration(milliseconds: 500),
+                  delay: const Duration(milliseconds: 100),
+                  child: _buildProfileSectionWithoutHeader(
+                    context,
+                    habitProvider,
+                    user,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                // Notifications section
+                FadeInUp(
+                  duration: const Duration(milliseconds: 500),
+                  delay: const Duration(milliseconds: 300),
+                  child: _buildNotificationsSection(
+                    context,
+                    habitProvider,
+                    user,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                // About section
+                FadeInUp(
+                  duration: const Duration(milliseconds: 500),
+                  delay: const Duration(milliseconds: 400),
+                  child: _buildAboutSection(context),
+                ),
+                const SizedBox(height: 24),
+                // Account section
+                FadeInUp(
+                  duration: const Duration(milliseconds: 500),
+                  delay: const Duration(milliseconds: 450),
+                  child: _buildAccountSection(context),
+                ),
+                const SizedBox(height: 100),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -138,10 +145,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           const Text(
             'Profile',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           GlassContainer(
@@ -154,32 +158,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     HapticFeedback.lightImpact();
                     _showAvatarPicker(context, habitProvider);
                   },
-                  child: Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      gradient: AppColors.primaryGradient,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primaryPurple.withAlpha(76),
-                          blurRadius: 16,
-                          offset: const Offset(0, 8),
+                  child: Builder(
+                    builder: (context) {
+                      final avatarId = user?.avatarEmoji ?? '';
+                      final avatarPath = ImageAvatars.getAvatarPath(avatarId);
+                      final hasImageAvatar = avatarPath != null;
+
+                      return Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          gradient: hasImageAvatar
+                              ? null
+                              : AppColors.primaryGradient,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primaryPurple.withAlpha(76),
+                              blurRadius: 16,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    child: Center(
-                      child: Text(
-                        user?.name?.isNotEmpty == true 
-                            ? user!.name[0].toUpperCase()
-                            : 'U',
-                        style: const TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
+                        child: hasImageAvatar
+                            ? ClipOval(
+                                child: Image.asset(
+                                  avatarPath,
+                                  width: 80,
+                                  height: 80,
+                                  fit: BoxFit.cover,
+                                ),
+                              )
+                            : Center(
+                                child: Text(
+                                  user?.name?.isNotEmpty == true
+                                      ? user!.name[0].toUpperCase()
+                                      : 'U',
+                                  style: const TextStyle(
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                      );
+                    },
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -187,7 +210,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   'Tap to change avatar',
                   style: TextStyle(
                     fontSize: 12,
-                    color: Theme.of(context).colorScheme.onSurface.withAlpha(153),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withAlpha(153),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -242,7 +267,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         Icon(
                           Icons.edit,
                           size: 18,
-                          color: Theme.of(context).colorScheme.onSurface.withAlpha(153),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withAlpha(153),
                         ),
                       ],
                     ),
@@ -250,9 +277,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 8),
                 // Level and XP
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.onSurface.withAlpha(13),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withAlpha(13),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
@@ -286,6 +318,177 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Widget _buildProfileSectionWithoutHeader(
+    BuildContext context,
+    HabitProvider habitProvider,
+    user,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: GlassContainer(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            // Avatar
+            GestureDetector(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                _showAvatarPicker(context, habitProvider);
+              },
+              child: Builder(
+                builder: (context) {
+                  final avatarId = user?.avatarEmoji ?? '';
+                  final avatarPath = ImageAvatars.getAvatarPath(avatarId);
+                  final hasImageAvatar = avatarPath != null;
+
+                  return Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      gradient: hasImageAvatar
+                          ? null
+                          : AppColors.primaryGradient,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primaryPurple.withAlpha(76),
+                          blurRadius: 16,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: hasImageAvatar
+                        ? ClipOval(
+                            child: Image.asset(
+                              avatarPath,
+                              width: 80,
+                              height: 80,
+                              fit: BoxFit.cover,
+                            ),
+                          )
+                        : Center(
+                            child: Text(
+                              user?.name?.isNotEmpty == true
+                                  ? user!.name[0].toUpperCase()
+                                  : 'U',
+                              style: const TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Tap to change avatar',
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurface.withAlpha(153),
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Name
+            if (_isEditingName)
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _nameController,
+                      autofocus: true,
+                      decoration: const InputDecoration(
+                        hintText: 'Enter your name',
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      habitProvider.updateUser(
+                        name: _nameController.text.trim(),
+                      );
+                      setState(() => _isEditingName = false);
+                    },
+                    icon: const Icon(Icons.check, color: Colors.green),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      _nameController.text = user?.name ?? 'User';
+                      setState(() => _isEditingName = false);
+                    },
+                    icon: const Icon(
+                      Icons.close,
+                      color: AppColors.secondaryPink,
+                    ),
+                  ),
+                ],
+              )
+            else
+              GestureDetector(
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  setState(() => _isEditingName = true);
+                },
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      user?.name ?? 'User',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.edit,
+                      size: 18,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withAlpha(153),
+                    ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 8),
+            // Level and XP
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.onSurface.withAlpha(13),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ShaderMask(
+                    shaderCallback: (bounds) =>
+                        AppColors.cyanPurpleGradient.createShader(bounds),
+                    child: const Icon(
+                      Icons.star,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Level ${habitProvider.level} • ${habitProvider.totalXP} XP',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildAppearanceSection(
     BuildContext context,
     ThemeProvider themeProvider,
@@ -297,27 +500,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           const Text(
             'Appearance',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           GlassContainer(
             padding: const EdgeInsets.all(4),
             child: Column(
               children: [
-                // Theme toggle
-                _buildSettingsTile(
-                  context,
-                  icon: themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
-                  title: 'Dark Mode',
-                  subtitle: themeProvider.isDarkMode ? 'On' : 'Off',
-                  trailing: Switch(
-                    value: themeProvider.isDarkMode,
-                    onChanged: (value) => themeProvider.setDarkMode(value),
-                  ),
-                ),
                 // Accent color
                 _buildSettingsTile(
                   context,
@@ -363,10 +552,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           const Text(
             'Notifications & Feedback',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           GlassContainer(
@@ -377,25 +563,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   context,
                   icon: Icons.notifications,
                   title: 'Habit Reminders',
-                  subtitle: user?.notificationsEnabled == true ? 'Enabled' : 'Disabled',
+                  subtitle: user?.notificationsEnabled == true
+                      ? 'Enabled'
+                      : 'Disabled',
                   trailing: Switch(
                     value: user?.notificationsEnabled ?? true,
                     onChanged: (value) async {
                       HapticFeedback.lightImpact();
                       if (value) {
-                        final granted = await habitProvider.requestNotificationPermission();
+                        final granted = await habitProvider
+                            .requestNotificationPermission();
                         if (!granted) {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text('Enable notification permission in settings'),
+                                content: Text(
+                                  'Enable notification permission in settings',
+                                ),
                               ),
                             );
                           }
                           setState(() {});
                           return;
                         }
-                        await habitProvider.updateUser(notificationsEnabled: true);
+                        await habitProvider.updateUser(
+                          notificationsEnabled: true,
+                        );
                       } else {
                         await habitProvider.disableAllNotifications();
                       }
@@ -407,7 +600,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   context,
                   icon: Icons.nightlight_round,
                   title: 'Quiet Hours',
-                  subtitle: '${_formatTime(_quietStart)} - ${_formatTime(_quietEnd)}',
+                  subtitle:
+                      '${_formatTime(_quietStart)} - ${_formatTime(_quietEnd)}',
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () async {
                     HapticFeedback.lightImpact();
@@ -448,10 +642,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildDataSection(
-    BuildContext context,
-    HabitProvider habitProvider,
-  ) {
+  Widget _buildDataSection(BuildContext context, HabitProvider habitProvider) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -459,10 +650,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           const Text(
             'Data & Privacy',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           GlassContainer(
@@ -518,10 +706,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           const Text(
             'About',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           GlassContainer(
@@ -537,32 +722,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _buildSettingsTile(
                   context,
                   icon: Icons.code,
-                  title: 'Made with ❤️',
-                  subtitle: 'Flutter & Dart',
-                ),
-                _buildSettingsTile(
-                  context,
-                  icon: Icons.star_rate,
-                  title: 'Rate App',
+                  title: 'Made with love by Aziz Tounsi',
+                  subtitle: 'View Portfolio',
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
+                  onTap: () async {
                     HapticFeedback.lightImpact();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Thanks for rating!')),
-                    );
-                  },
-                ),
-                _buildSettingsTile(
-                  context,
-                  icon: Icons.share,
-                  title: 'Share App',
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    HapticFeedback.lightImpact();
-                    Clipboard.setData(const ClipboardData(text: 'Check out this Habit Tracker app!'));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Share text copied to clipboard')),
-                    );
+                    final url = Uri.parse('https://aziz-tounsi.github.io/');
+                    if (await canLaunchUrl(url)) {
+                      await launchUrl(
+                        url,
+                        mode: LaunchMode.externalApplication,
+                      );
+                    }
                   },
                 ),
               ],
@@ -593,10 +764,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       title: Text(
         title,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-        ),
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
       ),
       subtitle: subtitle != null
           ? Text(
@@ -626,10 +794,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               const Text(
                 'Choose Avatar',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
               GridView.builder(
@@ -650,7 +815,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     },
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.onSurface.withAlpha(13),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withAlpha(13),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Center(
@@ -685,48 +852,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               const Text(
                 'Choose Accent Color',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
               Wrap(
                 spacing: 16,
                 runSpacing: 16,
-                children: List.generate(
-                  AppColors.habitColors.length,
-                  (index) {
-                    final isSelected = index == themeProvider.accentColorIndex;
-                    return GestureDetector(
-                      onTap: () {
-                        themeProvider.setAccentColor(index);
-                        Navigator.pop(context);
-                      },
-                      child: Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: AppColors.habitColors[index],
-                          shape: BoxShape.circle,
-                          border: isSelected
-                              ? Border.all(color: Colors.white, width: 3)
-                              : null,
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.habitColors[index].withAlpha(102),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: isSelected
-                            ? const Icon(Icons.check, color: Colors.white)
+                children: List.generate(AppColors.habitColors.length, (index) {
+                  final isSelected = index == themeProvider.accentColorIndex;
+                  return GestureDetector(
+                    onTap: () {
+                      themeProvider.setAccentColor(index);
+                      Navigator.pop(context);
+                    },
+                    child: Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: AppColors.habitColors[index],
+                        shape: BoxShape.circle,
+                        border: isSelected
+                            ? Border.all(color: Colors.white, width: 3)
                             : null,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.habitColors[index].withAlpha(102),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
-                    );
-                  },
-                ),
+                      child: isSelected
+                          ? const Icon(Icons.check, color: Colors.white)
+                          : null,
+                    ),
+                  );
+                }),
               ),
               const SizedBox(height: 20),
             ],
@@ -794,7 +955,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Navigator.of(context).pop();
               }
             },
-            style: TextButton.styleFrom(foregroundColor: const Color(0xFFEF4444)),
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFFEF4444),
+            ),
             child: const Text('Clear All'),
           ),
         ],
@@ -805,7 +968,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildAccountSection(BuildContext context) {
     final authProvider = context.read<AuthProvider>();
     final userEmail = authProvider.userEmail;
-    
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -813,10 +976,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           const Text(
             'Account',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           GlassContainer(
@@ -850,9 +1010,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showLogoutDialog(BuildContext context) {
+    final authProvider = context.read<AuthProvider>();
+    final habitProvider = context.read<HabitProvider>();
+    
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Row(
           children: [
@@ -866,21 +1029,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context);
-              final authProvider = context.read<AuthProvider>();
-              final habitProvider = context.read<HabitProvider>();
+              Navigator.pop(dialogContext);
               await authProvider.signOut();
               await habitProvider.clearAllData();
               if (context.mounted) {
                 Navigator.of(context).popUntil((route) => route.isFirst);
               }
             },
-            style: TextButton.styleFrom(foregroundColor: AppColors.primaryPurple),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.primaryPurple,
+            ),
             child: const Text('Sign Out'),
           ),
         ],
@@ -912,7 +1075,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
-  Future<void> _savePrefs({bool? sounds, bool? haptics, TimeOfDay? start, TimeOfDay? end}) async {
+  Future<void> _savePrefs({
+    bool? sounds,
+    bool? haptics,
+    TimeOfDay? start,
+    TimeOfDay? end,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     bool quietChanged = false;
     if (sounds != null) {
@@ -945,7 +1113,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
   }
 
-  String _formatPrefsTime(TimeOfDay time) => '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+  String _formatPrefsTime(TimeOfDay time) =>
+      '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
 
   String _formatTime(TimeOfDay time) {
     final hour = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
@@ -955,7 +1124,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _pickQuietHours() async {
-    final start = await showTimePicker(context: context, initialTime: _quietStart);
+    final start = await showTimePicker(
+      context: context,
+      initialTime: _quietStart,
+    );
     if (start == null) return;
     final end = await showTimePicker(context: context, initialTime: _quietEnd);
     if (end == null) return;
@@ -985,36 +1157,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
               'unlockedStones': user.unlockedStones,
             },
       'habits': habits
-          .map((h) => {
-                'id': h.id,
-                'name': h.name,
-                'description': h.description,
-                'iconIndex': h.iconIndex,
-                'colorIndex': h.colorIndex,
-                'category': h.category,
-                'scheduledDays': h.scheduledDays,
-                'targetDaysPerWeek': h.targetDaysPerWeek,
-                'createdAt': h.createdAt.toIso8601String(),
-                'reminderTime': h.reminderTime,
-                'isArchived': h.isArchived,
-                'currentStreak': h.currentStreak,
-                'longestStreak': h.longestStreak,
-                'totalCompletions': h.totalCompletions,
-                'completedDates': h.completedDates,
-                'isQuitHabit': h.isQuitHabit,
-                'quitStartDate': h.quitStartDate?.toIso8601String(),
-                'moneySavedPerDay': h.moneySavedPerDay,
-                'relapses': h.relapses?.map((d) => d.toIso8601String()).toList(),
-              })
+          .map(
+            (h) => {
+              'id': h.id,
+              'name': h.name,
+              'description': h.description,
+              'iconIndex': h.iconIndex,
+              'colorIndex': h.colorIndex,
+              'category': h.category,
+              'scheduledDays': h.scheduledDays,
+              'targetDaysPerWeek': h.targetDaysPerWeek,
+              'createdAt': h.createdAt.toIso8601String(),
+              'reminderTime': h.reminderTime,
+              'isArchived': h.isArchived,
+              'currentStreak': h.currentStreak,
+              'longestStreak': h.longestStreak,
+              'totalCompletions': h.totalCompletions,
+              'completedDates': h.completedDates,
+              'isQuitHabit': h.isQuitHabit,
+              'quitStartDate': h.quitStartDate?.toIso8601String(),
+              'moneySavedPerDay': h.moneySavedPerDay,
+              'relapses': h.relapses?.map((d) => d.toIso8601String()).toList(),
+            },
+          )
           .toList(),
     };
 
     await file.writeAsString(jsonEncode(data));
 
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Backup saved to ${file.path}')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Backup saved to ${file.path}')));
     }
   }
 
@@ -1024,14 +1198,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
       dialogTitle: 'Select Habit Backup',
       type: FileType.custom,
       allowedExtensions: const ['json'],
-      initialDirectory: (Platform.isAndroid || Platform.isIOS) ? null : dir.path,
+      initialDirectory: (Platform.isAndroid || Platform.isIOS)
+          ? null
+          : dir.path,
     );
 
     if (result == null || result.files.single.path == null) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No backup selected')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('No backup selected')));
       }
       return;
     }
@@ -1039,9 +1215,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final file = File(result.files.single.path!);
     if (!await file.exists()) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('File not found: ${file.path}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('File not found: ${file.path}')));
       }
       return;
     }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class AppConstants {
   // App info
-  static const String appName = 'Habit Tracker';
+  static const String appName = 'Rytto';
   static const String appVersion = '1.0.0';
 
   // XP System

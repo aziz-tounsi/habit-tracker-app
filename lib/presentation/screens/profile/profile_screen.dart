@@ -7,6 +7,7 @@ import 'package:iconsax/iconsax.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/currencies.dart';
 import '../../../core/constants/avatars.dart';
+import '../../../core/utils/helpers.dart';
 import '../../../data/models/stone_model.dart';
 import '../../../providers/habit_provider.dart';
 import '../../widgets/common/galaxy_background.dart';
@@ -49,7 +50,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final maxScroll = _scrollController.position.maxScrollExtent;
       final currentScroll = _scrollController.offset;
       setState(() {
-        _scrollProgress = maxScroll > 0 ? (currentScroll / maxScroll).clamp(0.0, 1.0) : 0.0;
+        _scrollProgress = maxScroll > 0
+            ? (currentScroll / maxScroll).clamp(0.0, 1.0)
+            : 0.0;
       });
     }
   }
@@ -76,383 +79,291 @@ class _ProfileScreenState extends State<ProfileScreen> {
           final user = habitProvider.user;
 
           return SingleChildScrollView(
-          controller: _scrollController,
-          padding: const EdgeInsets.symmetric(vertical: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              FadeInDown(
-                duration: const Duration(milliseconds: 500),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Text(
-                    'Profile',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              
-              // Profile User Widget - profile-focused with avatar, name, level/XP, achievements
-              // Made glassy to match the rest of the app
-              FadeInUp(
-                duration: const Duration(milliseconds: 500),
-                delay: const Duration(milliseconds: 100),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Colors.white.withOpacity(0.1),
-                          Colors.white.withOpacity(0.05),
-                        ],
-                      ),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.1),
-                        width: 1.0,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 20,
-                          spreadRadius: 0,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        // Clean avatar without ring (per feedback)
-                        Container(
-                          width: 100,
-                          height: 100,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                AppColors.primaryPurple,
-                                AppColors.secondaryPink,
-                              ],
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.primaryPurple.withOpacity(0.3),
-                                blurRadius: 20,
-                                spreadRadius: 2,
-                              ),
-                            ],
-                          ),
-                          padding: const EdgeInsets.all(4),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: AppColors.darkCard,
-                            ),
-                            padding: const EdgeInsets.all(8),
-                            child: GradientAvatarBuilder(
-                              seed: _userAvatar,
-                              size: 64,
-                              gradientColors: PremiumAvatars.getById(_userAvatar)?.gradientColors,
-                              icon: PremiumAvatars.getById(_userAvatar)?.icon,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        
-                        // Username
-                        Text(
-                          _userName,
-                          style: const TextStyle(
-                            fontSize: 24,
+            controller: _scrollController,
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                FadeInDown(
+                  duration: const Duration(milliseconds: 500),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      'Profile',
+                      style: Theme.of(context).textTheme.headlineMedium
+                          ?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        
-                        // Level Badge
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          decoration: BoxDecoration(
-                            gradient: AppColors.primaryGradient,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.primaryPurple.withOpacity(0.3),
-                                blurRadius: 10,
-                                spreadRadius: 1,
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.star, color: Colors.white, size: 16),
-                              const SizedBox(width: 6),
-                              Text(
-                                'Level ${user?.level ?? 0}',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                '${user?.totalXP ?? 0} XP',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.white.withOpacity(0.8),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        
-                        // Achievement count
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            ShaderMask(
-                              shaderCallback: (bounds) =>
-                                  AppColors.goldGradient.createShader(bounds),
-                              child: const Icon(
-                                Icons.emoji_events,
-                                color: Colors.white,
-                                size: 18,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              '${user?.unlockedAchievements.length ?? 0} Achievements',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.white.withOpacity(0.7),
-                              ),
-                            ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Profile User Widget - profile-focused with avatar, name, level/XP, achievements
+                // Made glassy to match the rest of the app
+                FadeInUp(
+                  duration: const Duration(milliseconds: 500),
+                  delay: const Duration(milliseconds: 100),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Colors.white.withOpacity(0.1),
+                            Colors.white.withOpacity(0.05),
                           ],
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              
-              // Crystal Stone Showcase
-              FadeInUp(
-                duration: const Duration(milliseconds: 500),
-                delay: const Duration(milliseconds: 150),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: StoneShowcase(
-                    unlockedStoneIds: user?.unlockedStones ?? [],
-                    onStoneTap: (stone) {
-                      _showStoneDetails(context, stone, true);
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              
-              // Stats Cards
-              FadeInUp(
-                duration: const Duration(milliseconds: 500),
-                delay: const Duration(milliseconds: 200),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _buildPremiumStatCard(
-                          context,
-                          'Streak',
-                          '${habitProvider.currentMaxStreak}',
-                          'days',
-                          Icons.trending_up,
-                          AppColors.cyanPurpleGradient,
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.1),
+                          width: 1.0,
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _buildPremiumStatCard(
-                          context,
-                          'Completions',
-                          '${habitProvider.totalCompletions}',
-                          'total',
-                          Icons.check_circle,
-                          AppColors.primaryGradient,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              
-              // Period Selector
-              FadeInUp(
-                duration: const Duration(milliseconds: 500),
-                delay: const Duration(milliseconds: 300),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: PeriodSelector(
-                    selectedPeriod: _selectedPeriod,
-                    onPeriodChanged: (period) {
-                      setState(() {
-                        _selectedPeriod = period;
-                      });
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              
-              // Gradient Area Chart
-              FadeInUp(
-                duration: const Duration(milliseconds: 500),
-                delay: const Duration(milliseconds: 400),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Colors.white.withOpacity(0.1),
-                          Colors.white.withOpacity(0.05),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 20,
+                            spreadRadius: 0,
+                            offset: const Offset(0, 10),
+                          ),
                         ],
                       ),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.1),
-                        width: 1.0,
+                      child: Column(
+                        children: [
+                          // Clean avatar without ring (per feedback)
+                          Builder(
+                            builder: (context) {
+                              final avatarPath = ImageAvatars.getAvatarPath(
+                                _userAvatar,
+                              );
+                              final hasImageAvatar = avatarPath != null;
+
+                              return Container(
+                                width: 100,
+                                height: 100,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      AppColors.primaryPurple,
+                                      AppColors.secondaryPink,
+                                    ],
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.primaryPurple
+                                          .withOpacity(0.3),
+                                      blurRadius: 20,
+                                      spreadRadius: 2,
+                                    ),
+                                  ],
+                                ),
+                                padding: const EdgeInsets.all(4),
+                                child: hasImageAvatar
+                                    ? ClipOval(
+                                        child: Image.asset(
+                                          avatarPath,
+                                          fit: BoxFit.cover,
+                                          width: 92,
+                                          height: 92,
+                                        ),
+                                      )
+                                    : Container(
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: AppColors.darkCard,
+                                        ),
+                                        padding: const EdgeInsets.all(8),
+                                        child: GradientAvatarBuilder(
+                                          seed: _userAvatar,
+                                          size: 64,
+                                          gradientColors:
+                                              PremiumAvatars.getById(
+                                                _userAvatar,
+                                              )?.gradientColors,
+                                          icon: PremiumAvatars.getById(
+                                            _userAvatar,
+                                          )?.icon,
+                                        ),
+                                      ),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Username
+                          Text(
+                            _userName,
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+
+                          // Level Badge
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              gradient: AppColors.primaryGradient,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primaryPurple.withOpacity(
+                                    0.3,
+                                  ),
+                                  blurRadius: 10,
+                                  spreadRadius: 1,
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.star,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Level ${user?.level ?? 0}',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '${user?.totalXP ?? 0} XP',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.white.withOpacity(0.8),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+
+                          // Achievement count
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              ShaderMask(
+                                shaderCallback: (bounds) =>
+                                    AppColors.goldGradient.createShader(bounds),
+                                child: const Icon(
+                                  Icons.emoji_events,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                '${user?.unlockedAchievements.length ?? 0} Achievements',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white.withOpacity(0.7),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 20,
-                          spreadRadius: 0,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Crystal Stone Showcase
+                FadeInUp(
+                  duration: const Duration(milliseconds: 500),
+                  delay: const Duration(milliseconds: 150),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: StoneShowcase(
+                      unlockedStoneIds: user?.unlockedStones ?? [],
+                      onStoneTap: (stone) {
+                        _showStoneDetails(context, stone, true);
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Stats Cards
+                FadeInUp(
+                  duration: const Duration(milliseconds: 500),
+                  delay: const Duration(milliseconds: 200),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
                       children: [
-                        Text(
-                          'Activity Overview',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                        Expanded(
+                          child: _buildPremiumStatCard(
+                            context,
+                            'Streak',
+                            '${habitProvider.currentMaxStreak}',
+                            'days',
+                            Icons.trending_up,
+                            AppColors.cyanPurpleGradient,
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        PremiumStatsChart(
-                          weekData: _getWeekData(habitProvider),
-                          selectedPeriod: _selectedPeriod,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildPremiumStatCard(
+                            context,
+                            'Completions',
+                            '${habitProvider.totalCompletions}',
+                            'total',
+                            Icons.check_circle,
+                            AppColors.primaryGradient,
+                          ),
                         ),
                       ],
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 24),
-              
-              // Additional Stats Grid
-              FadeInUp(
-                duration: const Duration(milliseconds: 500),
-                delay: const Duration(milliseconds: 500),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildStatCard(
-                              context,
-                              'Total Habits',
-                              '${habitProvider.totalHabits}',
-                              Icons.assignment,
-                              AppColors.primaryGradient,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _buildStatCard(
-                              context,
-                              'Total XP',
-                              '${habitProvider.totalXP}',
-                              Icons.star,
-                              AppColors.cyanPurpleGradient,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildStatCard(
-                              context,
-                              'Best Streak',
-                              '${habitProvider.longestStreak} days',
-                              Icons.emoji_events,
-                              AppColors.greenCyanGradient,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _buildStatCard(
-                              context,
-                              'Achievements',
-                              '${user?.unlockedAchievements.length ?? 0}',
-                              Icons.emoji_events,
-                              AppColors.primaryGradient,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                const SizedBox(height: 24),
+
+                // Period Selector
+                FadeInUp(
+                  duration: const Duration(milliseconds: 500),
+                  delay: const Duration(milliseconds: 300),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: PeriodSelector(
+                      selectedPeriod: _selectedPeriod,
+                      onPeriodChanged: (period) {
+                        setState(() {
+                          _selectedPeriod = period;
+                        });
+                      },
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 24),
-              
-              // Settings Entry
-              FadeInUp(
-                duration: const Duration(milliseconds: 500),
-                delay: const Duration(milliseconds: 600),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: GestureDetector(
-                    onTap: () {
-                      HapticFeedback.lightImpact();
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SettingsScreen(),
-                        ),
-                      );
-                    },
+                const SizedBox(height: 16),
+
+                // Gradient Area Chart
+                FadeInUp(
+                  duration: const Duration(milliseconds: 500),
+                  delay: const Duration(milliseconds: 400),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -478,68 +389,196 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ],
                       ),
-                      child: Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              gradient: AppColors.primaryGradient,
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.primaryPurple.withOpacity(0.3),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: const Icon(
-                              Iconsax.setting_2,
+                          Text(
+                            'Activity Overview',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
                               color: Colors.white,
-                              size: 24,
                             ),
                           ),
-                          const SizedBox(width: 16),
-                          const Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Settings',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                SizedBox(height: 4),
-                                Text(
-                                  'App preferences, notifications & more',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white70,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Icon(
-                            Icons.chevron_right,
-                            color: Colors.white.withOpacity(0.6),
+                          const SizedBox(height: 8),
+                          PremiumStatsChart(
+                            weekData: _getChartData(habitProvider),
+                            selectedPeriod: _selectedPeriod,
                           ),
                         ],
                       ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 40),
-            ],
-          ),
-        );
-      },
-    ),
+                const SizedBox(height: 24),
+
+                // Additional Stats Grid
+                FadeInUp(
+                  duration: const Duration(milliseconds: 500),
+                  delay: const Duration(milliseconds: 500),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildStatCard(
+                                context,
+                                'Total Habits',
+                                '${habitProvider.totalHabits}',
+                                Icons.assignment,
+                                AppColors.primaryGradient,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _buildStatCard(
+                                context,
+                                'Total XP',
+                                '${habitProvider.totalXP}',
+                                Icons.star,
+                                AppColors.cyanPurpleGradient,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildStatCard(
+                                context,
+                                'Best Streak',
+                                '${habitProvider.longestStreak} days',
+                                Icons.emoji_events,
+                                AppColors.greenCyanGradient,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _buildStatCard(
+                                context,
+                                'Achievements',
+                                '${user?.unlockedAchievements.length ?? 0}',
+                                Icons.emoji_events,
+                                AppColors.primaryGradient,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Settings Entry
+                FadeInUp(
+                  duration: const Duration(milliseconds: 500),
+                  delay: const Duration(milliseconds: 600),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: GestureDetector(
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SettingsScreen(),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Colors.white.withOpacity(0.1),
+                              Colors.white.withOpacity(0.05),
+                            ],
+                          ),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.1),
+                            width: 1.0,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 20,
+                              spreadRadius: 0,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                gradient: AppColors.primaryGradient,
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.primaryPurple.withOpacity(
+                                      0.3,
+                                    ),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Iconsax.setting_2,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Settings',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    'App preferences, notifications & more',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.white70,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Icon(
+                              Icons.chevron_right,
+                              color: Colors.white.withOpacity(0.6),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 40),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -563,10 +602,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Colors.white.withOpacity(0.05),
           ],
         ),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.1),
-          width: 1.0,
-        ),
+        border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.0),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.2),
@@ -653,10 +689,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Colors.white.withOpacity(0.05),
           ],
         ),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.1),
-          width: 1.0,
-        ),
+        border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.0),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.2),
@@ -707,28 +740,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  List<double> _getWeekData(HabitProvider provider) {
-    // Generate sample data based on actual stats
-    // In a real implementation, this would fetch actual weekly completion data
-    final baseValue = provider.totalCompletions > 0 
-        ? (provider.totalCompletions / 30).clamp(0, 10).toDouble()
-        : 2.0;
-    
-    return [
-      baseValue * 0.8,
-      baseValue * 1.2,
-      baseValue * 0.9,
-      baseValue * 1.5,
-      baseValue * 1.1,
-      baseValue * 1.3,
-      baseValue * 0.7,
-    ];
+  List<double> _getChartData(HabitProvider provider) {
+    final now = DateTime.now();
+
+    switch (_selectedPeriod) {
+      case 'Week':
+        final data = provider.getCompletionsForDays(7);
+        return List.generate(7, (i) {
+          final date = now.subtract(Duration(days: 6 - i));
+          final key = Helpers.formatDateForStorage(date);
+          return (data[key] ?? 0).toDouble();
+        });
+
+      case 'Month':
+        final data = provider.getMonthCompletions(now);
+        final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+        return List.generate(daysInMonth, (i) {
+          final date = DateTime(now.year, now.month, i + 1);
+          final key = Helpers.formatDateForStorage(date);
+          return (data[key] ?? 0).toDouble();
+        });
+
+      default: // Lifetime
+        final data = provider.getLifetimeMonthlyCompletions();
+        // Return completions per month
+        final months = data.entries.toList();
+        return months.map((e) => e.value.toDouble()).toList();
+    }
   }
 
   String _formatDate(DateTime date) {
     final months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${months[date.month - 1]} ${date.day}, ${date.year}';
   }
@@ -752,7 +806,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   height: 40,
                   decoration: BoxDecoration(
                     gradient: isSelected ? AppColors.greenCyanGradient : null,
-                    color: isSelected ? null : Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
+                    color: isSelected
+                        ? null
+                        : Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withOpacity(0.05),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Center(
@@ -761,14 +819,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface,
+                        color: isSelected
+                            ? Colors.white
+                            : Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                   ),
                 ),
                 title: Text(currency.name),
                 subtitle: Text(currency.code),
-                trailing: isSelected ? const Icon(Icons.check, color: Colors.green) : null,
+                trailing: isSelected
+                    ? const Icon(Icons.check, color: Colors.green)
+                    : null,
                 onTap: () => Navigator.pop(context, currency),
               );
             },
@@ -792,7 +854,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  void _showStoneDetails(BuildContext context, StoneModel stone, bool isUnlocked) {
+  void _showStoneDetails(
+    BuildContext context,
+    StoneModel stone,
+    bool isUnlocked,
+  ) {
     HapticFeedback.mediumImpact();
     showModalBottomSheet(
       context: context,
@@ -803,10 +869,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              const Color(0xFF1A1A2E),
-              AppColors.darkCard,
-            ],
+            colors: [const Color(0xFF1A1A2E), AppColors.darkCard],
           ),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
@@ -823,7 +886,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Stone preview
             Container(
               decoration: BoxDecoration(
@@ -858,7 +921,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            
+
             ShaderMask(
               shaderCallback: (bounds) => LinearGradient(
                 colors: [stone.primaryColor, stone.glowColor],
@@ -873,7 +936,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            
+
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               decoration: BoxDecoration(
@@ -895,7 +958,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            
+
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
@@ -910,7 +973,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            
+
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [

@@ -18,7 +18,7 @@ import 'presentation/screens/auth/login_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Set system UI overlay style
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -45,15 +45,65 @@ class HabitTrackerApp extends StatelessWidget {
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {
           return MaterialApp(
-            title: 'Habit Tracker',
+            title: 'Rytto',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
-            themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+            themeMode: themeProvider.isDarkMode
+                ? ThemeMode.dark
+                : ThemeMode.light,
+            builder: (context, child) {
+              // Apply responsive wrapper to ALL routes
+              return ResponsiveAppWrapper(child: child ?? const SizedBox());
+            },
             home: const AppWrapper(),
           );
         },
       ),
+    );
+  }
+}
+
+/// Wraps the app in a mobile-sized container on desktop
+class ResponsiveAppWrapper extends StatelessWidget {
+  final Widget child;
+
+  const ResponsiveAppWrapper({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Check if screen is wider than mobile (desktop/tablet)
+        final isDesktop = constraints.maxWidth > 600;
+
+        if (isDesktop) {
+          // Desktop: Center the app with mobile width
+          const mobileWidth = 375.0;
+          return Container(
+            color: Colors.black,
+            child: Center(
+              child: Container(
+                width: mobileWidth,
+                constraints: BoxConstraints(maxHeight: constraints.maxHeight),
+                decoration: BoxDecoration(
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.5),
+                      blurRadius: 50,
+                      spreadRadius: 10,
+                    ),
+                  ],
+                ),
+                child: ClipRect(child: child),
+              ),
+            ),
+          );
+        } else {
+          // Mobile: Use full screen
+          return child;
+        }
+      },
     );
   }
 }
@@ -63,9 +113,9 @@ class AppWrapper extends StatelessWidget {
 
   /// Helper to check if app is still loading
   bool _isLoading(HabitProvider habitProvider, AuthProvider authProvider) {
-    return habitProvider.isLoading || 
-           authProvider.state == AuthState.initial || 
-           authProvider.state == AuthState.loading;
+    return habitProvider.isLoading ||
+        authProvider.state == AuthState.initial ||
+        authProvider.state == AuthState.loading;
   }
 
   @override
@@ -134,7 +184,7 @@ class LoadingScreen extends StatelessWidget {
                 shaderCallback: (bounds) =>
                     AppColors.primaryGradient.createShader(bounds),
                 child: const Text(
-                  'Habit Tracker',
+                  'Rytto',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
@@ -148,7 +198,9 @@ class LoadingScreen extends StatelessWidget {
               duration: const Duration(milliseconds: 600),
               delay: const Duration(milliseconds: 400),
               child: const CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryPurple),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  AppColors.primaryPurple,
+                ),
               ),
             ),
           ],
@@ -179,10 +231,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: IndexedStack(
-          index: _currentIndex,
-          children: _screens,
-        ),
+        child: IndexedStack(index: _currentIndex, children: _screens),
       ),
       // Center FAB for Add Habit - always visible
       floatingActionButton: FadeInUp(
@@ -208,9 +257,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const AddHabitScreen(),
-                ),
+                MaterialPageRoute(builder: (context) => const AddHabitScreen()),
               );
             },
             child: const Icon(Icons.add, color: Colors.white, size: 32),
@@ -242,8 +289,18 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _buildNavBarItem(Icons.home_outlined, Icons.home, 'Home', 0),
-                      _buildNavBarItem(Icons.bar_chart_outlined, Icons.bar_chart, 'Stats', 1),
+                      _buildNavBarItem(
+                        Icons.home_outlined,
+                        Icons.home,
+                        'Home',
+                        0,
+                      ),
+                      _buildNavBarItem(
+                        Icons.bar_chart_outlined,
+                        Icons.bar_chart,
+                        'Stats',
+                        1,
+                      ),
                     ],
                   ),
                 ),
@@ -254,8 +311,18 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _buildNavBarItem(Icons.emoji_events_outlined, Icons.emoji_events, 'Awards', 2),
-                      _buildNavBarItem(Icons.person_outline, Icons.person, 'Profile', 3),
+                      _buildNavBarItem(
+                        Icons.emoji_events_outlined,
+                        Icons.emoji_events,
+                        'Awards',
+                        2,
+                      ),
+                      _buildNavBarItem(
+                        Icons.person_outline,
+                        Icons.person,
+                        'Profile',
+                        3,
+                      ),
                     ],
                   ),
                 ),

@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.habit_tracker_app"
+    namespace = "com.aziztounsi.rytto"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -20,7 +20,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.habit_tracker_app"
+        applicationId = "com.aziztounsi.rytto"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

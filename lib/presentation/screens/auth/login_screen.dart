@@ -34,17 +34,19 @@ class _LoginScreenState extends State<LoginScreen> {
   static const double _strengthForUppercase = 0.15;
   static const double _strengthForNumber = 0.15;
   static const double _strengthForSpecialChar = 0.15;
-  
+
   // Email validation pattern
   static final RegExp _emailRegex = RegExp(
     r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
   );
-  
+
   // Password character patterns
   static final RegExp _lowercasePattern = RegExp(r'[a-z]');
   static final RegExp _uppercasePattern = RegExp(r'[A-Z]');
   static final RegExp _numberPattern = RegExp(r'[0-9]');
-  static final RegExp _specialCharPattern = RegExp(r'[!@#$%^&*(),.?":{}|<>\-_=+\[\]\\;/~`]');
+  static final RegExp _specialCharPattern = RegExp(
+    r'[!@#$%^&*(),.?":{}|<>\-_=+\[\]\\;/~`]',
+  );
 
   @override
   void dispose() {
@@ -65,26 +67,27 @@ class _LoginScreenState extends State<LoginScreen> {
   /// Calculate password strength (0.0 to 1.0)
   double _calculatePasswordStrength(String password) {
     if (password.isEmpty) return 0.0;
-    
+
     double strength = 0.0;
-    
+
     // Length checks
     if (password.length >= 6) strength += _baseStrengthForMinLength;
     if (password.length >= 8) strength += _bonusStrengthForMediumLength;
     if (password.length >= 12) strength += _bonusStrengthForLongLength;
-    
+
     // Contains lowercase
     if (_lowercasePattern.hasMatch(password)) strength += _strengthForLowercase;
-    
+
     // Contains uppercase
     if (_uppercasePattern.hasMatch(password)) strength += _strengthForUppercase;
-    
+
     // Contains number
     if (_numberPattern.hasMatch(password)) strength += _strengthForNumber;
-    
+
     // Contains special character
-    if (_specialCharPattern.hasMatch(password)) strength += _strengthForSpecialChar;
-    
+    if (_specialCharPattern.hasMatch(password))
+      strength += _strengthForSpecialChar;
+
     return strength.clamp(0.0, 1.0);
   }
 
@@ -115,7 +118,9 @@ class _LoginScreenState extends State<LoginScreen> {
           content: const Text('Please accept the Terms & Privacy Policy'),
           backgroundColor: AppColors.warning,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
       );
       return;
@@ -146,7 +151,9 @@ class _LoginScreenState extends State<LoginScreen> {
           content: Text(authProvider.error ?? 'An error occurred'),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
       );
       authProvider.clearError();
@@ -159,42 +166,6 @@ class _LoginScreenState extends State<LoginScreen> {
     await authProvider.continueAsGuest();
   }
 
-  Future<void> _signInWithGoogle() async {
-    HapticFeedback.mediumImpact();
-    final authProvider = context.read<AuthProvider>();
-    final success = await authProvider.signInWithGoogle();
-    
-    if (!success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(authProvider.error ?? 'Google sign in failed'),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-      );
-      authProvider.clearError();
-    }
-  }
-
-  Future<void> _signInWithApple() async {
-    HapticFeedback.mediumImpact();
-    final authProvider = context.read<AuthProvider>();
-    final success = await authProvider.signInWithApple();
-    
-    if (!success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(authProvider.error ?? 'Apple sign in failed'),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-      );
-      authProvider.clearError();
-    }
-  }
-
   void _navigateToForgotPassword() {
     HapticFeedback.lightImpact();
     Navigator.of(context).push(
@@ -205,7 +176,10 @@ class _LoginScreenState extends State<LoginScreen> {
           const begin = Offset(1.0, 0.0);
           const end = Offset.zero;
           const curve = Curves.easeInOutCubic;
-          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          var tween = Tween(
+            begin: begin,
+            end: end,
+          ).chain(CurveTween(curve: curve));
           return SlideTransition(
             position: animation.drive(tween),
             child: child,
@@ -218,8 +192,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final passwordStrength = _calculatePasswordStrength(_passwordController.text);
-    
+    final passwordStrength = _calculatePasswordStrength(
+      _passwordController.text,
+    );
+
     return GalaxyBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -245,7 +221,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               borderRadius: BorderRadius.circular(24),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.primaryPurple.withOpacity(0.4),
+                                  color: AppColors.primaryPurple.withOpacity(
+                                    0.4,
+                                  ),
                                   blurRadius: 30,
                                   offset: const Offset(0, 10),
                                 ),
@@ -262,7 +240,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             shaderCallback: (bounds) =>
                                 AppColors.primaryGradient.createShader(bounds),
                             child: const Text(
-                              'Habit Tracker',
+                              'Rytto',
                               style: TextStyle(
                                 fontSize: 28,
                                 fontWeight: FontWeight.bold,
@@ -274,73 +252,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           AnimatedSwitcher(
                             duration: const Duration(milliseconds: 300),
                             child: Text(
-                              _isSignUp ? 'Create your account' : 'Welcome back!',
+                              _isSignUp ? 'Create your account' : '',
                               key: ValueKey(_isSignUp),
                               style: TextStyle(
                                 fontSize: 15,
                                 color: Colors.white.withOpacity(0.7),
                               ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-
-                    // Social login buttons
-                    FadeInUp(
-                      duration: const Duration(milliseconds: 500),
-                      delay: const Duration(milliseconds: 50),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: _buildSocialButton(
-                              onTap: authProvider.isLoading ? null : _signInWithGoogle,
-                              icon: Icons.g_mobiledata_rounded,
-                              label: 'Google',
-                              iconColor: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _buildSocialButton(
-                              onTap: authProvider.isLoading ? null : _signInWithApple,
-                              icon: Icons.apple,
-                              label: 'Apple',
-                              iconColor: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Divider with "or"
-                    FadeInUp(
-                      duration: const Duration(milliseconds: 500),
-                      delay: const Duration(milliseconds: 100),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              height: 1,
-                              color: Colors.white.withOpacity(0.2),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Text(
-                              'or continue with email',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.white.withOpacity(0.5),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: Container(
-                              height: 1,
-                              color: Colors.white.withOpacity(0.2),
                             ),
                           ),
                         ],
@@ -352,261 +269,290 @@ class _LoginScreenState extends State<LoginScreen> {
                     FadeInUp(
                       duration: const Duration(milliseconds: 500),
                       delay: const Duration(milliseconds: 150),
-                      child: GlassContainer(
-                        padding: const EdgeInsets.all(24),
-                        useBackdropFilter: true,
-                        child: Form(
-                          key: _formKey,
-                          child: Column(
-                            children: [
-                              // Name field (sign up only)
-                              AnimatedSize(
-                                duration: const Duration(milliseconds: 300),
-                                curve: Curves.easeInOut,
-                                child: _isSignUp
-                                    ? Column(
-                                        children: [
-                                          _buildTextField(
-                                            controller: _nameController,
-                                            label: 'Display Name',
-                                            icon: Iconsax.user,
-                                            hint: 'Enter your name (optional)',
-                                          ),
-                                          const SizedBox(height: 16),
-                                        ],
-                                      )
-                                    : const SizedBox.shrink(),
-                              ),
-
-                              // Email field
-                              _buildTextField(
-                                controller: _emailController,
-                                label: 'Email',
-                                icon: Iconsax.sms,
-                                hint: 'Enter your email',
-                                keyboardType: TextInputType.emailAddress,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter your email';
-                                  }
-                                  if (!_isValidEmail(value)) {
-                                    return 'Please enter a valid email';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              const SizedBox(height: 16),
-
-                              // Password field
-                              _buildTextField(
-                                controller: _passwordController,
-                                label: 'Password',
-                                icon: Iconsax.lock,
-                                hint: 'Enter your password',
-                                obscureText: _obscurePassword,
-                                onChanged: (_) => setState(() {}),
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    _obscurePassword
-                                        ? Iconsax.eye_slash
-                                        : Iconsax.eye,
-                                    color: Colors.white.withOpacity(0.5),
-                                  ),
-                                  onPressed: () {
-                                    HapticFeedback.selectionClick();
-                                    setState(() {
-                                      _obscurePassword = !_obscurePassword;
-                                    });
-                                  },
-                                ),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter your password';
-                                  }
-                                  if (value.length < 6) {
-                                    return 'Password must be at least 6 characters';
-                                  }
-                                  return null;
-                                },
-                              ),
-
-                              // Password strength indicator (sign up only)
-                              AnimatedSize(
-                                duration: const Duration(milliseconds: 300),
-                                curve: Curves.easeInOut,
-                                child: _isSignUp && _passwordController.text.isNotEmpty
-                                    ? Padding(
-                                        padding: const EdgeInsets.only(top: 12),
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Expanded(
-                                                  child: ClipRRect(
-                                                    borderRadius: BorderRadius.circular(4),
-                                                    child: LinearProgressIndicator(
-                                                      value: passwordStrength,
-                                                      backgroundColor: Colors.white.withOpacity(0.1),
-                                                      valueColor: AlwaysStoppedAnimation(
-                                                        _getPasswordStrengthColor(passwordStrength),
-                                                      ),
-                                                      minHeight: 4,
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 12),
-                                                Text(
-                                                  _getPasswordStrengthText(passwordStrength),
-                                                  style: TextStyle(
-                                                    fontSize: 11,
-                                                    fontWeight: FontWeight.w500,
-                                                    color: _getPasswordStrengthColor(passwordStrength),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          children: [
+                            // Name field (sign up only)
+                            AnimatedSize(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                              child: _isSignUp
+                                  ? Column(
+                                      children: [
+                                        _buildTextField(
+                                          controller: _nameController,
+                                          label: 'Display Name',
+                                          icon: Iconsax.user,
+                                          hint: 'Enter your name (optional)',
                                         ),
-                                      )
-                                    : const SizedBox.shrink(),
-                              ),
+                                        const SizedBox(height: 16),
+                                      ],
+                                    )
+                                  : const SizedBox.shrink(),
+                            ),
 
-                              // Forgot password link (sign in only)
-                              if (!_isSignUp) ...[
-                                const SizedBox(height: 12),
-                                Align(
-                                  alignment: Alignment.centerRight,
-                                  child: GestureDetector(
-                                    onTap: _navigateToForgotPassword,
-                                    child: Text(
-                                      'Forgot Password?',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w500,
-                                        color: AppColors.primaryPurple.withOpacity(0.9),
-                                      ),
-                                    ),
-                                  ),
+                            // Email field
+                            _buildTextField(
+                              controller: _emailController,
+                              label: 'Email',
+                              icon: Iconsax.sms,
+                              hint: 'Enter your email',
+                              keyboardType: TextInputType.emailAddress,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter your email';
+                                }
+                                if (!_isValidEmail(value)) {
+                                  return 'Please enter a valid email';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Password field
+                            _buildTextField(
+                              controller: _passwordController,
+                              label: 'Password',
+                              icon: Iconsax.lock,
+                              hint: 'Enter your password',
+                              obscureText: _obscurePassword,
+                              onChanged: (_) => setState(() {}),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? Iconsax.eye_slash
+                                      : Iconsax.eye,
+                                  color: Colors.white.withOpacity(0.5),
                                 ),
-                              ],
+                                onPressed: () {
+                                  HapticFeedback.selectionClick();
+                                  setState(() {
+                                    _obscurePassword = !_obscurePassword;
+                                  });
+                                },
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter your password';
+                                }
+                                if (value.length < 6) {
+                                  return 'Password must be at least 6 characters';
+                                }
+                                return null;
+                              },
+                            ),
 
-                              // Terms checkbox (sign up only)
-                              AnimatedSize(
-                                duration: const Duration(milliseconds: 300),
-                                curve: Curves.easeInOut,
-                                child: _isSignUp
-                                    ? Padding(
-                                        padding: const EdgeInsets.only(top: 16),
-                                        child: GestureDetector(
-                                          onTap: () {
-                                            HapticFeedback.selectionClick();
-                                            setState(() {
-                                              _acceptedTerms = !_acceptedTerms;
-                                            });
-                                          },
-                                          child: Row(
+                            // Password strength indicator (sign up only)
+                            AnimatedSize(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                              child:
+                                  _isSignUp &&
+                                      _passwordController.text.isNotEmpty
+                                  ? Padding(
+                                      padding: const EdgeInsets.only(top: 12),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
                                             children: [
-                                              Container(
-                                                width: 22,
-                                                height: 22,
-                                                decoration: BoxDecoration(
-                                                  borderRadius: BorderRadius.circular(6),
-                                                  border: Border.all(
-                                                    color: _acceptedTerms
-                                                        ? AppColors.primaryPurple
-                                                        : Colors.white.withOpacity(0.3),
-                                                    width: 2,
-                                                  ),
-                                                  gradient: _acceptedTerms
-                                                      ? AppColors.primaryGradient
-                                                      : null,
-                                                ),
-                                                child: _acceptedTerms
-                                                    ? const Icon(
-                                                        Icons.check,
-                                                        size: 14,
-                                                        color: Colors.white,
-                                                      )
-                                                    : null,
-                                              ),
-                                              const SizedBox(width: 10),
                                               Expanded(
-                                                child: RichText(
-                                                  text: TextSpan(
-                                                    style: TextStyle(
-                                                      fontSize: 12,
-                                                      color: Colors.white.withOpacity(0.7),
-                                                    ),
-                                                    children: [
-                                                      const TextSpan(text: 'I agree to the '),
-                                                      TextSpan(
-                                                        text: 'Terms of Service',
-                                                        style: TextStyle(
-                                                          color: AppColors.primaryPurple.withOpacity(0.9),
-                                                          fontWeight: FontWeight.w500,
+                                                child: ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(4),
+                                                  child: LinearProgressIndicator(
+                                                    value: passwordStrength,
+                                                    backgroundColor: Colors
+                                                        .white
+                                                        .withOpacity(0.1),
+                                                    valueColor:
+                                                        AlwaysStoppedAnimation(
+                                                          _getPasswordStrengthColor(
+                                                            passwordStrength,
+                                                          ),
                                                         ),
-                                                      ),
-                                                      const TextSpan(text: ' and '),
-                                                      TextSpan(
-                                                        text: 'Privacy Policy',
-                                                        style: TextStyle(
-                                                          color: AppColors.primaryPurple.withOpacity(0.9),
-                                                          fontWeight: FontWeight.w500,
-                                                        ),
-                                                      ),
-                                                    ],
+                                                    minHeight: 4,
                                                   ),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 12),
+                                              Text(
+                                                _getPasswordStrengthText(
+                                                  passwordStrength,
+                                                ),
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w500,
+                                                  color:
+                                                      _getPasswordStrengthColor(
+                                                        passwordStrength,
+                                                      ),
                                                 ),
                                               ),
                                             ],
                                           ),
-                                        ),
-                                      )
-                                    : const SizedBox.shrink(),
-                              ),
-                              const SizedBox(height: 24),
-
-                              // Submit button
-                              GestureDetector(
-                                onTap: authProvider.isLoading ? null : _submit,
-                                child: Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
-                                  decoration: BoxDecoration(
-                                    gradient: AppColors.primaryGradient,
-                                    borderRadius: BorderRadius.circular(16),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: AppColors.primaryPurple.withOpacity(0.4),
-                                        blurRadius: 12,
-                                        offset: const Offset(0, 6),
+                                        ],
                                       ),
-                                    ],
-                                  ),
-                                  child: Center(
-                                    child: authProvider.isLoading
-                                        ? const SizedBox(
-                                            width: 24,
-                                            height: 24,
-                                            child: CircularProgressIndicator(
-                                              color: Colors.white,
-                                              strokeWidth: 2,
-                                            ),
-                                          )
-                                        : Text(
-                                            _isSignUp ? 'Sign Up' : 'Sign In',
-                                            style: const TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.white,
-                                            ),
-                                          ),
+                                    )
+                                  : const SizedBox.shrink(),
+                            ),
+
+                            // Forgot password link (sign in only)
+                            if (!_isSignUp) ...[
+                              const SizedBox(height: 12),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: GestureDetector(
+                                  onTap: _navigateToForgotPassword,
+                                  child: Text(
+                                    'Forgot Password?',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.primaryPurple
+                                          .withOpacity(0.9),
+                                    ),
                                   ),
                                 ),
                               ),
                             ],
-                          ),
+
+                            // Terms checkbox (sign up only)
+                            AnimatedSize(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                              child: _isSignUp
+                                  ? Padding(
+                                      padding: const EdgeInsets.only(top: 16),
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          HapticFeedback.selectionClick();
+                                          setState(() {
+                                            _acceptedTerms = !_acceptedTerms;
+                                          });
+                                        },
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              width: 22,
+                                              height: 22,
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                                border: Border.all(
+                                                  color: _acceptedTerms
+                                                      ? AppColors.primaryPurple
+                                                      : Colors.white
+                                                            .withOpacity(0.3),
+                                                  width: 2,
+                                                ),
+                                                gradient: _acceptedTerms
+                                                    ? AppColors.primaryGradient
+                                                    : null,
+                                              ),
+                                              child: _acceptedTerms
+                                                  ? const Icon(
+                                                      Icons.check,
+                                                      size: 14,
+                                                      color: Colors.white,
+                                                    )
+                                                  : null,
+                                            ),
+                                            const SizedBox(width: 10),
+                                            Expanded(
+                                              child: RichText(
+                                                text: TextSpan(
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.white
+                                                        .withOpacity(0.7),
+                                                  ),
+                                                  children: [
+                                                    const TextSpan(
+                                                      text: 'I agree to the ',
+                                                    ),
+                                                    TextSpan(
+                                                      text: 'Terms of Service',
+                                                      style: TextStyle(
+                                                        color: AppColors
+                                                            .primaryPurple
+                                                            .withOpacity(0.9),
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                      ),
+                                                    ),
+                                                    const TextSpan(
+                                                      text: ' and ',
+                                                    ),
+                                                    TextSpan(
+                                                      text: 'Privacy Policy',
+                                                      style: TextStyle(
+                                                        color: AppColors
+                                                            .primaryPurple
+                                                            .withOpacity(0.9),
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    )
+                                  : const SizedBox.shrink(),
+                            ),
+                            const SizedBox(height: 24),
+
+                            // Submit button
+                            GestureDetector(
+                              onTap: authProvider.isLoading ? null : _submit,
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                                decoration: BoxDecoration(
+                                  gradient: AppColors.primaryGradient,
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.primaryPurple
+                                          .withOpacity(0.4),
+                                      blurRadius: 12,
+                                      offset: const Offset(0, 6),
+                                    ),
+                                  ],
+                                ),
+                                child: Center(
+                                  child: authProvider.isLoading
+                                      ? const SizedBox(
+                                          width: 24,
+                                          height: 24,
+                                          child: CircularProgressIndicator(
+                                            color: Colors.white,
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      : Text(
+                                          _isSignUp
+                                              ? 'Sign Up'
+                                              : 'Sign in to sync',
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -630,8 +576,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           GestureDetector(
                             onTap: _toggleMode,
                             child: ShaderMask(
-                              shaderCallback: (bounds) =>
-                                  AppColors.primaryGradient.createShader(bounds),
+                              shaderCallback: (bounds) => AppColors
+                                  .primaryGradient
+                                  .createShader(bounds),
                               child: Text(
                                 _isSignUp ? 'Sign In' : 'Sign Up',
                                 style: const TextStyle(
@@ -674,63 +621,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 20),
-
-                    // Info text
-                    FadeInUp(
-                      duration: const Duration(milliseconds: 500),
-                      delay: const Duration(milliseconds: 300),
-                      child: Text(
-                        'Sign in to sync your habits across devices',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.white.withOpacity(0.5),
-                        ),
-                      ),
-                    ),
                     const SizedBox(height: 16),
                   ],
                 );
               },
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSocialButton({
-    required VoidCallback? onTap,
-    required IconData icon,
-    required String label,
-    required Color iconColor,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: Colors.white.withOpacity(0.15),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: iconColor, size: 22),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Colors.white70,
-              ),
-            ),
-          ],
         ),
       ),
     );

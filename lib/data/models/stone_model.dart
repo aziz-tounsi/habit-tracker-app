@@ -38,7 +38,7 @@ class StoneModel {
       id: 'celestial_quartz',
       name: 'Celestial Quartz',
       description: 'A crystal infused with starlight, said to guide the lost back to their path.',
-      unlockCondition: 'Complete your first habit',
+      unlockCondition: 'Complete onboarding',
       rarity: StoneRarity.common,
       primaryColor: Color(0xFFE8E8FF),
       secondaryColor: Color(0xFFB8B8D4),

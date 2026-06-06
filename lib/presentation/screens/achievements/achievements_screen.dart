@@ -314,7 +314,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
               showGlow: isUnlocked,
               animate: false, // No animation for grid stones
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             Flexible(
               child: Text(
                 stone.name,
@@ -328,7 +328,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                 maxLines: 2,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 6),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
