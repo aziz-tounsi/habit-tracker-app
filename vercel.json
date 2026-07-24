@@ -2,7 +2,7 @@
   "buildCommand": "./flutter/bin/flutter build web --release --no-tree-shake-icons",
   "outputDirectory": "build/web",
   "devCommand": "./flutter/bin/flutter run -d web-server --web-port 3000",
-  "installCommand": "if [ ! -d flutter ]; then git clone --depth 1 https://github.com/flutter/flutter.git; fi && ./flutter/bin/flutter pub get",
+  "installCommand": "if [ ! -d flutter ]; then git clone --depth 1 --branch 3.44.8 https://github.com/flutter/flutter.git; fi && ./flutter/bin/flutter pub get",
   "framework": null,
   "rewrites": [
     {
